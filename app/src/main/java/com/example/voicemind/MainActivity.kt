@@ -1,0 +1,22 @@
+package com.example.voicemind
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.navigation.compose.rememberNavController
+import com.example.voicemind.ui.navigation.NavGraph
+import com.example.voicemind.ui.theme.VocabMindTheme
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            VocabMindTheme {
+                val navController = rememberNavController()
+                NavGraph(navController = navController)
+            }
+        }
+    }
+}

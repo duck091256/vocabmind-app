@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">VocabMind</string>
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
+    <string name="welcome_back">Welcome back,</string>
+    <string name="hello_user">Hello, %1$s 👋</string>
+    <string name="recent_vocab_sets">Recent Vocab Sets</string>
+    <string name="see_all">See all</string>
+    <string name="ai_generate">AI Generate</string>
+    <string name="ai_generate_desc">Create flashcards in seconds with AI power</string>
+    <string name="my_sets">My Sets</string>
+    <string name="my_sets_desc">Organize your vocab</string>
+    <string name="quick_quiz">Quick Quiz</string>
+    <string name="quick_quiz_desc">Test your memory</string>
+    <string name="todays_streak">Today\'s Streak</string>
+    <string name="days_active">%1$d Days Active!</string>
+    <string name="home">Home</string>
+    <string name="sets">Sets</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <string name="words_count">%1$d words</string>
+</resources>
