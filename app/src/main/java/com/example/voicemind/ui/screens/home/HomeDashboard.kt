@@ -268,7 +268,7 @@ private fun QuickActionsSection() {
         
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickActionSmallCard(
-                iconResId = R.drawable.book_1_svgrepo_com,
+                iconResId = R.drawable.book,
                 title = stringResource(R.string.my_sets),
                 description = stringResource(R.string.my_sets_desc),
                 iconColor = Color(0xFFEBE3FF),
