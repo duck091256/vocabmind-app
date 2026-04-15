@@ -51,4 +51,32 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="log_out">Log Out</string>
     <string name="version_info">VocabMind v2.4.1 (Build 892)</string>
+
+    <string name="welcome_back_title">Welcome Back</string>
+    <string name="login_subtitle">Continue your journey to linguistic mastery.</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="or_continue_with">OR CONTINUE WITH</string>
+    <string name="google">Google</string>
+    <string name="apple">Apple</string>
+    <string name="dont_have_account">Don\'t have an account yet? </string>
+    <string name="join_vocabmind">Join VocabMind</string>
+    <string name="email_hint">name@example.com</string>
+
+    <string name="create_account">Create Account</string>
+    <string name="register_subtitle">Start your intellectual journey with\ncurated AI learning.</string>
+    <string name="full_name">FULL NAME</string>
+    <string name="full_name_hint">John Doe</string>
+    <string name="scholar_email_hint">scholar@vocabmind.ai</string>
+    <string name="agree_to_terms">I agree to the </string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="and"> and </string>
+    <string name="sign_up">Sign Up</string>
+    <string name="already_have_account">Already have an account? </string>
+    <string name="log_in">Log in</string>
+    <string name="unlock_ai_mastery">Unlock AI Mastery: </string>
+    <string name="unlock_ai_mastery_desc">Join 20k+ scholars building expansive vocabularies with our AI learning paths.</string>
+    <string name="join">Join</string>
 </resources>
