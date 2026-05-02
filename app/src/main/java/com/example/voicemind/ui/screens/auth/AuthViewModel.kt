@@ -1,9 +1,10 @@
-package com.example.voicemind.ui.viewmodel
+package com.example.voicemind.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.voicemind.domain.model.User
 import com.example.voicemind.domain.repository.AuthRepository
+import com.example.voicemind.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -25,7 +27,11 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             authRepository.signInWithEmail(email, password)
-                .onSuccess { _authState.value = AuthState.Success(it) }
+                .onSuccess { user ->
+                    val uid = user.uid
+                    userProfileRepository.syncUser(uid)
+                    _authState.value = AuthState.Success(user)
+                }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Lỗi không xác định") }
         }
     }
@@ -34,7 +40,11 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             authRepository.signUpWithEmail(email, password)
-                .onSuccess { _authState.value = AuthState.Success(it) }
+                .onSuccess { user ->
+                    val uid = user.uid
+                    userProfileRepository.syncUser(uid)
+                    _authState.value = AuthState.Success(user)
+                }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Lỗi không xác định") }
         }
     }
@@ -43,7 +53,11 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             authRepository.signInWithGoogle(idToken)
-                .onSuccess { _authState.value = AuthState.Success(it) }
+                .onSuccess { user ->
+                    val uid = user.uid
+                    userProfileRepository.syncUser(uid)
+                    _authState.value = AuthState.Success(user)
+                }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Lỗi không xác định") }
         }
     }

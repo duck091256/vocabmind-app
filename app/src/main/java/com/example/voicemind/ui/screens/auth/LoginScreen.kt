@@ -49,12 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -69,8 +66,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.voicemind.R
 import com.example.voicemind.ui.theme.VocabMindTheme
-import com.example.voicemind.ui.viewmodel.AuthState
-import com.example.voicemind.ui.viewmodel.AuthViewModel
 
 private val PrimaryPurple = Color(0xFF5E27FD)
 private val BackgroundGray = Color(0xFFF7F8FA)
@@ -81,7 +76,7 @@ private val CardShadowColor = Color(0x0D000000)
 
 @Composable
 fun LoginScreen(
-    onNavigateToHome: () -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -92,7 +87,7 @@ fun LoginScreen(
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
-            onNavigateToHome()
+            onLoginSuccess()
             viewModel.resetState()
         }
     }

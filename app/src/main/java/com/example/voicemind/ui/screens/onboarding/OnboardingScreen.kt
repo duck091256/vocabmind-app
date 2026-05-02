@@ -40,7 +40,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.voicemind.domain.model.EnglishLevel
 import com.example.voicemind.domain.model.LearningGoal
-import com.example.voicemind.ui.viewmodel.OnboardingViewModel
 
 @Composable
 fun OnboardingScreen(

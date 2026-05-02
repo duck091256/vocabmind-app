@@ -12,5 +12,5 @@ interface UserProfileDao {
     suspend fun insertOrUpdate(profile: UserProfileEntity)
 
     @Query("SELECT * FROM user_profile WHERE uid = :uid LIMIT 1")
-    suspend fun getByUid(uid: String): UserProfileEntity?
+    suspend fun getByUid(uid: String?): UserProfileEntity?
 }

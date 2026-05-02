@@ -1,5 +1,6 @@
 package com.example.voicemind.ui.screens.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,8 +23,61 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.voicemind.R
+import com.example.voicemind.ui.navigation.AppBottomNavigationBar
+import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
+// TopBar expose ra ngoài để NavGraph gắn vào Scaffold chung
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsTopBar() {
+    Surface(
+        shadowElevation = 2.dp,
+        color = Color.White
+    ) {
+        TopAppBar(
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFD591)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.man),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
+            },
+            actions = {
+                Icon(
+                    painter = painterResource(R.drawable.sparkle),
+                    contentDescription = null,
+                    tint = Color(0xFF6200EE),
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(24.dp)
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+        )
+    }
+}
+
+// Content thuần — không Scaffold, không topBar/bottomBar bên trong
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
@@ -35,264 +89,208 @@ fun SettingsScreen(
     onPrivacyPolicyClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            SettingsTopBar()
-        },
-        bottomBar = {
-            SettingsBottomNavigation()
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(Color(0xFFF8F9FB))
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.settings),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1C1E)
-            )
-            Text(
-                text = stringResource(R.string.settings_subtitle),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF6C727A),
-                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
-            )
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF1A1C1E)
+        )
+        Text(
+            text = stringResource(R.string.settings_subtitle),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF6C727A),
+            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
+        )
 
-            SettingsSection(title = stringResource(R.string.account)) {
-                SettingsItem(
-                    icon = painterResource(R.drawable.user),
-                    title = stringResource(R.string.profile_info),
-                    subtitle = stringResource(R.string.profile_info_desc),
-                    onClick = onProfileClick,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = Color(0xFFCED4DA)
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
-                SettingsItem(
-                    icon = painterResource(R.drawable.lock_password),
-                    title = stringResource(R.string.change_password),
-                    subtitle = stringResource(R.string.change_password_desc),
-                    onClick = onPasswordClick,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = Color(0xFFCED4DA)
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-            }
-
-            SettingsSection(title = stringResource(R.string.learning_preferences), modifier = Modifier.padding(top = 24.dp)) {
-                SettingsItem(
-                    icon = painterResource(R.drawable.flag),
-                    title = stringResource(R.string.daily_goal),
-                    subtitle = stringResource(R.string.daily_goal_desc),
-                    onClick = onDailyGoalClick,
-                    trailingIcon = {
-                        Text(
-                            text = stringResource(R.string.adjust),
-                            color = Color(0xFF4A378B),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
-                SettingsItem(
-                    icon = painterResource(R.drawable.language),
-                    title = stringResource(R.string.native_language),
-                    subtitle = stringResource(R.string.native_language_desc),
-                    onClick = onLanguageClick,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_chevron_down),
-                            contentDescription = null,
-                            tint = Color(0xFFCED4DA)
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-            }
-
-            SettingsSection(title = stringResource(R.string.notifications), modifier = Modifier.padding(top = 24.dp)) {
-                SettingsItem(
-                    icon = painterResource(R.drawable.notification),
-                    title = stringResource(R.string.daily_reminder),
-                    subtitle = stringResource(R.string.daily_reminder_desc),
-                    trailingIcon = {
-                        Switch(
-                            checked = true,
-                            onCheckedChange = {},
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF6C4DDA),
-                                uncheckedBorderColor = Color.Transparent,
-                                uncheckedTrackColor = Color(0xFFE9ECEF)
-                            )
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
-                SettingsItem(
-                    icon = painterResource(R.drawable.streak_alerts),
-                    title = stringResource(R.string.streak_alerts),
-                    subtitle = stringResource(R.string.streak_alerts_desc),
-                    trailingIcon = {
-                        Switch(
-                            checked = true,
-                            onCheckedChange = {},
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF6C4DDA),
-                                uncheckedBorderColor = Color.Transparent,
-                                uncheckedTrackColor = Color(0xFFE9ECEF)
-                            )
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-            }
-
-            SettingsSection(title = stringResource(R.string.support), modifier = Modifier.padding(top = 24.dp)) {
-                SettingsItem(
-                    icon = painterResource(R.drawable.quiz_icon),
-                    title = stringResource(R.string.help_center),
-                    onClick = onHelpCenterClick,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_open_in_new),
-                            contentDescription = null,
-                            tint = Color(0xFFCED4DA),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
-                SettingsItem(
-                    icon = painterResource(R.drawable.privacy_policy),
-                    title = stringResource(R.string.privacy_policy),
-                    onClick = onPrivacyPolicyClick,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = Color(0xFFCED4DA)
-                        )
-                    },
-                    iconBackgroundColor = Color(0xFFF1EEFF),
-                    iconTintColor = Color(0xFF6C4DDA)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedButton(
-                onClick = onLogoutClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFFE03131)
-                ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFE3E3)))
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        SettingsSection(title = stringResource(R.string.account)) {
+            SettingsItem(
+                icon = painterResource(R.drawable.user),
+                title = stringResource(R.string.profile_info),
+                subtitle = stringResource(R.string.profile_info_desc),
+                onClick = onProfileClick,
+                trailingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.log_out),
+                        painter = painterResource(R.drawable.ic_chevron_right),
                         contentDescription = null,
+                        tint = Color(0xFFCED4DA)
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
+            SettingsItem(
+                icon = painterResource(R.drawable.lock_password),
+                title = stringResource(R.string.change_password),
+                subtitle = stringResource(R.string.change_password_desc),
+                onClick = onPasswordClick,
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chevron_right),
+                        contentDescription = null,
+                        tint = Color(0xFFCED4DA)
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+        }
+
+        SettingsSection(title = stringResource(R.string.learning_preferences), modifier = Modifier.padding(top = 24.dp)) {
+            SettingsItem(
+                icon = painterResource(R.drawable.flag),
+                title = stringResource(R.string.daily_goal),
+                subtitle = stringResource(R.string.daily_goal_desc),
+                onClick = onDailyGoalClick,
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.adjust),
+                        color = Color(0xFF6200EE),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
+            SettingsItem(
+                icon = painterResource(R.drawable.language),
+                title = stringResource(R.string.native_language),
+                subtitle = stringResource(R.string.native_language_desc),
+                onClick = onLanguageClick,
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chevron_down),
+                        contentDescription = null,
+                        tint = Color(0xFFCED4DA)
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+        }
+
+        SettingsSection(title = stringResource(R.string.notifications), modifier = Modifier.padding(top = 24.dp)) {
+            SettingsItem(
+                icon = painterResource(R.drawable.notification),
+                title = stringResource(R.string.daily_reminder),
+                subtitle = stringResource(R.string.daily_reminder_desc),
+                trailingIcon = {
+                    Switch(
+                        checked = true,
+                        onCheckedChange = {},
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF6200EE),
+                            uncheckedBorderColor = Color.Transparent,
+                            uncheckedTrackColor = Color(0xFFE9ECEF)
+                        )
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
+            SettingsItem(
+                icon = painterResource(R.drawable.streak_alerts),
+                title = stringResource(R.string.streak_alerts),
+                subtitle = stringResource(R.string.streak_alerts_desc),
+                trailingIcon = {
+                    Switch(
+                        checked = true,
+                        onCheckedChange = {},
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF6200EE),
+                            uncheckedBorderColor = Color.Transparent,
+                            uncheckedTrackColor = Color(0xFFE9ECEF)
+                        )
+                    )
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+        }
+
+        SettingsSection(title = stringResource(R.string.support), modifier = Modifier.padding(top = 24.dp)) {
+            SettingsItem(
+                icon = painterResource(R.drawable.quiz_icon),
+                title = stringResource(R.string.help_center),
+                onClick = onHelpCenterClick,
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_open_in_new),
+                        contentDescription = null,
+                        tint = Color(0xFFCED4DA),
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.log_out),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF1F3F5))
+            SettingsItem(
+                icon = painterResource(R.drawable.privacy_policy),
+                title = stringResource(R.string.privacy_policy),
+                onClick = onPrivacyPolicyClick,
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chevron_right),
+                        contentDescription = null,
+                        tint = Color(0xFFCED4DA)
                     )
-                }
-            }
-
-            Text(
-                text = stringResource(R.string.version_info),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 16.dp),
-                textAlign = TextAlign.Center,
-                fontSize = 12.sp,
-                color = Color(0xFF6C727A)
+                },
+                iconBackgroundColor = Color(0xFFEDE7F6),
+                iconTintColor = Color(0xFF6200EE)
             )
         }
-    }
-}
 
-@Composable
-fun SettingsTopBar() {
-    Surface(
-        color = Color.White,
-        shadowElevation = 0.5.dp
-    ) {
-        Row(
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedButton(
+            onClick = onLogoutClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color(0xFFE03131)
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFE3E3)))
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE9ECEF))
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.man),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        tint = Color.Unspecified
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
+                Icon(
+                    painter = painterResource(R.drawable.log_out),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "VocabMind",
-                    fontSize = 20.sp,
+                    text = stringResource(R.string.log_out),
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1C1E)
+                    fontSize = 16.sp
                 )
             }
-            Icon(
-                painter = painterResource(R.drawable.sparkle),
-                contentDescription = null,
-                tint = Color(0xFF6C4DDA),
-                modifier = Modifier.size(24.dp)
-            )
         }
+
+        Text(
+            text = stringResource(R.string.version_info),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, bottom = 16.dp),
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp,
+            color = Color(0xFF6C727A)
+        )
     }
 }
 
@@ -373,61 +371,20 @@ fun SettingsItem(
     }
 }
 
-@Composable
-fun SettingsBottomNavigation() {
-    NavigationBar(
-        containerColor = Color.White,
-        modifier = Modifier.height(80.dp),
-        tonalElevation = 8.dp
-    ) {
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(painter = painterResource(R.drawable.home), contentDescription = null) },
-            label = { Text(stringResource(R.string.home)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color(0xFFADB5BD),
-                unselectedTextColor = Color(0xFFADB5BD)
-            )
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(painter = painterResource(R.drawable.book), contentDescription = null) },
-            label = { Text(stringResource(R.string.sets)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color(0xFFADB5BD),
-                unselectedTextColor = Color(0xFFADB5BD)
-            )
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(painter = painterResource(R.drawable.user), contentDescription = null) },
-            label = { Text(stringResource(R.string.profile)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color(0xFFADB5BD),
-                unselectedTextColor = Color(0xFFADB5BD)
-            )
-        )
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(painter = painterResource(R.drawable.setting), contentDescription = null) },
-            label = { Text(stringResource(R.string.settings)) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF6C4DDA),
-                selectedTextColor = Color(0xFF6C4DDA),
-                indicatorColor = Color(0xFFF1EEFF)
-            )
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
     VocabMindTheme {
-        SettingsScreen()
+        Scaffold(
+            topBar = { SettingsTopBar() },
+            bottomBar = {
+                AppBottomNavigationBar(
+                    currentRoute = NavRoute.SETTINGS,
+                    onNavigate = { }
+                )
+            }
+        ) { paddingValues ->
+            SettingsScreen(modifier = Modifier.padding(paddingValues))
+        }
     }
 }

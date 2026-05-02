@@ -2,7 +2,6 @@ package com.example.voicemind.ui.screens.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,81 +23,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.voicemind.R
+import com.example.voicemind.ui.navigation.AppBottomNavigationBar
+import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
-@Composable
-fun ProfileScreen(
-    modifier: Modifier = Modifier
-) {
-    Scaffold(
-        topBar = {
-            ProfileTopBar()
-        },
-        bottomBar = {
-            ProfileBottomNavigationBar()
-        },
-        modifier = modifier.fillMaxSize(),
-        containerColor = Color(0xFFF8F9FA)
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProfileHeaderCard(
-                name = "Đức",
-                bio = "Polyglot Enthusiast"
-            )
-
-            StreakCard(
-                daysActive = 12,
-                longestStreak = 15
-            )
-
-            SectionTitle(title = stringResource(R.string.learning_journey))
-
-            StatCard(
-                iconRes = R.drawable.book,
-                value = "1,248",
-                label = stringResource(R.string.words_mastered),
-                iconContainerColor = Color(0xFFEDE7F6),
-                iconColor = Color(0xFF673AB7)
-            )
-
-            StatCard(
-                iconRes = R.drawable.quiz_icon,
-                value = "56",
-                label = stringResource(R.string.quizzes_taken),
-                iconContainerColor = Color(0xFFEDE7F6),
-                iconColor = Color(0xFF673AB7)
-            )
-
-            StatCard(
-                iconRes = R.drawable.add_set,
-                value = "14",
-                label = stringResource(R.string.sets_created),
-                iconContainerColor = Color(0xFFEDE7F6),
-                iconColor = Color(0xFF673AB7)
-            )
-
-            LevelProgressCard(
-                level = 18,
-                currentXp = "2,450",
-                totalXp = "3,000",
-                progress = 0.81f,
-                rank = "Silver\nScholar",
-                globalTop = "Top 5%"
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
+// TopBar expose ra ngoài để NavGraph gắn vào Scaffold chung
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopBar() {
@@ -114,8 +43,7 @@ fun ProfileTopBar() {
                         contentDescription = null,
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(CircleShape)
-                            .border(1.dp, Color.LightGray, CircleShape),
+                            .clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -131,7 +59,7 @@ fun ProfileTopBar() {
                 Icon(
                     painter = painterResource(id = R.drawable.sparkle),
                     contentDescription = null,
-                    tint = Color(0xFF673AB7),
+                    tint = Color(0xFF6200EE),
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .size(24.dp)
@@ -139,6 +67,69 @@ fun ProfileTopBar() {
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
+    }
+}
+
+// Content thuần — không Scaffold, không topBar/bottomBar bên trong
+@Composable
+fun ProfileScreen(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ProfileHeaderCard(
+            name = "Đức",
+            bio = "Polyglot Enthusiast"
+        )
+
+        StreakCard(
+            daysActive = 12,
+            longestStreak = 15
+        )
+
+        SectionTitle(title = stringResource(R.string.learning_journey))
+
+        StatCard(
+            iconRes = R.drawable.book,
+            value = "1,248",
+            label = stringResource(R.string.words_mastered),
+            iconContainerColor = Color(0xFFEDE7F6),
+            iconColor = Color(0xFF6200EE)
+        )
+
+        StatCard(
+            iconRes = R.drawable.quiz_icon,
+            value = "56",
+            label = stringResource(R.string.quizzes_taken),
+            iconContainerColor = Color(0xFFEDE7F6),
+            iconColor = Color(0xFF6200EE)
+        )
+
+        StatCard(
+            iconRes = R.drawable.add_set,
+            value = "14",
+            label = stringResource(R.string.sets_created),
+            iconContainerColor = Color(0xFFEDE7F6),
+            iconColor = Color(0xFF6200EE)
+        )
+
+        LevelProgressCard(
+            level = 18,
+            currentXp = "2,450",
+            totalXp = "3,000",
+            progress = 0.81f,
+            rank = "Silver\nScholar",
+            globalTop = "Top 5%"
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -209,7 +200,7 @@ fun StreakCard(daysActive: Int, longestStreak: Int) {
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xFF6200EE), Color(0xFF4A00B0))
+                        colors = listOf(Color(0xFF6200EE), Color(0xFF3700B3))
                     )
                 )
                 .padding(vertical = 32.dp, horizontal = 16.dp),
@@ -397,66 +388,20 @@ fun RankInfoBox(label: String, value: String, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun ProfileBottomNavigationBar() {
-    Surface(
-        shadowElevation = 16.dp,
-        color = Color.White
-    ) {
-        NavigationBar(
-            containerColor = Color.White,
-            tonalElevation = 0.dp,
-            modifier = Modifier.height(80.dp)
-        ) {
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.home), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(R.string.home), fontWeight = FontWeight.Bold) },
-                selected = false,
-                onClick = { },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
-                )
-            )
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.dictionary), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(R.string.sets), fontWeight = FontWeight.Bold) },
-                selected = false,
-                onClick = { },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
-                )
-            )
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.user), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(R.string.profile), fontWeight = FontWeight.Bold) },
-                selected = true,
-                onClick = { },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF6200EE),
-                    selectedTextColor = Color(0xFF6200EE),
-                    indicatorColor = Color(0xFFEDE7F6)
-                )
-            )
-            NavigationBarItem(
-                icon = { Icon(painterResource(id = R.drawable.setting), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(R.string.settings), fontWeight = FontWeight.Bold) },
-                selected = false,
-                onClick = { },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
-                )
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
     VocabMindTheme {
-        ProfileScreen()
+        Scaffold(
+            topBar = { ProfileTopBar() },
+            bottomBar = {
+                AppBottomNavigationBar(
+                    currentRoute = NavRoute.PROFILE,
+                    onNavigate = { }
+                )
+            }
+        ) { paddingValues ->
+            ProfileScreen(modifier = Modifier.padding(paddingValues))
+        }
     }
 }

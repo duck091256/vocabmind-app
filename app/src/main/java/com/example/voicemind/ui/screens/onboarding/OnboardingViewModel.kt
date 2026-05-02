@@ -1,4 +1,4 @@
-package com.example.voicemind.ui.viewmodel
+package com.example.voicemind.ui.screens.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,6 +32,14 @@ class OnboardingViewModel @Inject constructor(
                 userProfileRepository.isOnboardingCompleted(uid) -> "home"
                 else -> "onboarding"
             }
+        }
+    }
+
+    fun resolveDestinationAfterAuth() {
+        viewModelScope.launch {
+            val uid = authRepository.currentUser?.uid ?: return@launch
+            val completed = userProfileRepository.isOnboardingCompleted(uid)
+            _startDestination.value = if (completed) "home" else "onboarding"
         }
     }
 

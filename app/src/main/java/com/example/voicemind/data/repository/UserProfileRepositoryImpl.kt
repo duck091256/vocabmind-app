@@ -14,6 +14,24 @@ class UserProfileRepositoryImpl(
     private val dao: UserProfileDao
 ) : UserProfileRepository {
 
+    override suspend fun syncUser(uid: String) {
+        val doc = firestore.collection("users").document(uid).get().await()
+
+        if (doc.exists()) {
+            val entity = UserProfileEntity(
+                uid = uid,
+                displayName = doc.getString("displayName") ?: "",
+                nativeLanguage = doc.getString("nativeLanguage") ?: "",
+                level = doc.getString("level") ?: "BEGINNER",
+                goals = (doc.get("goals") as? List<String>)?.joinToString(",") ?: "",
+                topics = (doc.get("topics") as? List<String>)?.joinToString(",") ?: "",
+                onboardingCompleted = doc.getBoolean("onboardingCompleted") == true
+            )
+
+            dao.insertOrUpdate(entity)
+        }
+    }
+
     override suspend fun saveProfile(profile: UserProfile): Result<Unit> {
         return try {
             // Lưu Firestore
@@ -31,11 +49,14 @@ class UserProfileRepositoryImpl(
                 .await()
 
             // Lưu Room
-            dao.insertOrUpdate(profile.toEntity())
+            dao.insertOrUpdate(profile.copy(onboardingCompleted = true).toEntity())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+    override suspend fun getDisplayName(uid: String?): String? {
+        return dao.getByUid(uid)?.displayName
     }
 
     override suspend fun getProfile(uid: String): UserProfile? {

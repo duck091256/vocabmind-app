@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,40 +25,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.voicemind.R
+import com.example.voicemind.ui.navigation.AppBottomNavigationBar
+import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
 @Composable
 fun HomeDashboard(
-    userName: String = "Đức",
-    streakDays: Int = 12,
-//    viewModel: AuthViewModel = hiltViewModel(),
+    viewModel: HomeDashboardViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar()
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF8F9FA))
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-        ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            HeaderSection(userName, onNavigateToLogin)
-            Spacer(modifier = Modifier.height(32.dp))
-            RecentVocabSetsSection()
-            Spacer(modifier = Modifier.height(32.dp))
-            QuickActionsSection()
-            Spacer(modifier = Modifier.height(32.dp))
-            StreakSection(streakDays)
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+    val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+
+    HomeDashboardContent(
+        userName = displayName ?: "User",
+        onNavigateToLogin = onNavigateToLogin,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun HomeDashboardContent(
+    userName: String,
+    onNavigateToLogin: () -> Unit,
+    modifier: Modifier = Modifier,
+    streakDays: Int = 12,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+    ) {
+        Spacer(modifier = Modifier.height(20.dp))
+        HeaderSection(userName, onNavigateToLogin)
+        Spacer(modifier = Modifier.height(32.dp))
+        RecentVocabSetsSection()
+        Spacer(modifier = Modifier.height(32.dp))
+        QuickActionsSection()
+        Spacer(modifier = Modifier.height(32.dp))
+        StreakSection(streakDays)
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
@@ -104,7 +116,7 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
                 .background(Color.White, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Box( // Box này bọc icon (QUAN TRỌNG)
+            Box(
                 modifier = Modifier.size(27.dp)
             ) {
                 Icon(
@@ -115,7 +127,7 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
                         .align(Alignment.Center),
                     tint = Color(0xFF1A1C1E)
                 )
-                // Simple notification dot
+
                 Box(
                     modifier = Modifier
                         .size(8.dp)
@@ -450,7 +462,19 @@ private val sampleVocabSets = listOf(
 @Preview(showBackground = true)
 @Composable
 fun HomeDashboardPreview() {
-    VocabMindTheme {
-        HomeDashboard(onNavigateToLogin = {})
+    Scaffold(
+        bottomBar = {
+            AppBottomNavigationBar(
+                currentRoute = NavRoute.HOME,
+                onNavigate = { }
+            )
+        }
+    ) { _ ->
+        VocabMindTheme {
+            HomeDashboardContent(
+                userName = "Duck",
+                onNavigateToLogin = {}
+            )
+        }
     }
 }

@@ -79,4 +79,16 @@
     <string name="unlock_ai_mastery">Unlock AI Mastery: </string>
     <string name="unlock_ai_mastery_desc">Join 20k+ scholars building expansive vocabularies with our AI learning paths.</string>
     <string name="join">Join</string>
+
+    <string name="study_sets">Study Sets</string>
+    <string name="total_count">%1$d Total</string>
+    <string name="study_sets_desc">Manage and master your academic vocabulary collections.</string>
+    <string name="search_sets_placeholder">Search your sets…</string>
+    <string name="terms_count">%1$d Terms</string>
+    <string name="created_time">Created %1$s</string>
+    <string name="percent_mastered">%1$d%% Mastered</string>
+    <string name="words_mastered_ratio">%1$d / %2$d Words</string>
+    <string name="need_more_focus">Need more focus?</string>
+    <string name="ai_upsell_desc">Use AI to generate a custom set from any PDF or web article.</string>
+    <string name="try_ai_generate">Try AI Generate</string>
 </resources>
