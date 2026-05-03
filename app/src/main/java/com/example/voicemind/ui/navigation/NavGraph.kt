@@ -1,15 +1,30 @@
 package com.example.voicemind.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.example.voicemind.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -17,6 +32,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.voicemind.ui.components.SpeedDialFab
 import com.example.voicemind.ui.screens.auth.LoginScreen
 import com.example.voicemind.ui.screens.auth.RegisterScreen
 import com.example.voicemind.ui.screens.home.HomeDashboard
@@ -32,8 +48,23 @@ fun AppNavigationRoot(navController: NavHostController) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRouteString = currentBackStackEntry?.destination?.route
     val selectedNavRoute = NavRoute.entries.find { it.route == currentRouteString }
+    var isFabMenuExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentRouteString) {
+        isFabMenuExpanded = false
+    }
 
     Scaffold(
+//        topBar = {
+//            when (selectedNavRoute) {
+//                NavRoute.SETS     -> StudySetsTopBar()
+//                NavRoute.PROFILE  -> ProfileTopBar()
+//                NavRoute.SETTINGS -> SettingsTopBar()
+//                // HOME tự quản lý TopBar riêng bên trong HomeDashboard
+//                // launcher, login, onboarding không có TopBar
+//                else -> {}
+//            }
+//        },
         bottomBar = {
             if (selectedNavRoute != null) {
                 AppBottomNavigationBar(
@@ -46,6 +77,30 @@ fun AppNavigationRoot(navController: NavHostController) {
                                 saveState = true
                             }
                         }
+                    }
+                )
+            }
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = selectedNavRoute == NavRoute.SETS,
+                enter = fadeIn(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(300))
+            ) {
+                SpeedDialFab(
+                    isExpanded = isFabMenuExpanded,
+                    onToggle = { isFabMenuExpanded = !isFabMenuExpanded },
+                    onCreateNew = {
+                        isFabMenuExpanded = false
+                        /* TODO: Logic tạo set mới */
+                    },
+                    onDownload = {
+                        isFabMenuExpanded = false
+                        /* TODO: Logic tải set */
+                    },
+                    onAddFromFriends = {
+                        isFabMenuExpanded = false
+                        /* TODO: Logic thêm set từ bạn bè */
                     }
                 )
             }

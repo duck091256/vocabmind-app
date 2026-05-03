@@ -27,7 +27,6 @@ import com.example.voicemind.ui.navigation.AppBottomNavigationBar
 import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
-// TopBar expose ra ngoài để NavGraph gắn vào Scaffold chung
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudySetsTopBar() {
@@ -77,7 +76,6 @@ fun StudySetsTopBar() {
     }
 }
 
-// Content thuần — không Scaffold, không topBar/bottomBar bên trong
 @Composable
 fun StudySetsScreen(
     modifier: Modifier = Modifier
@@ -377,7 +375,7 @@ fun StudySetsScreenPreview() {
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.add_set),
+                        painter = painterResource(id = R.drawable.ic_add),
                         contentDescription = "Add Set",
                         modifier = Modifier.size(24.dp)
                     )
