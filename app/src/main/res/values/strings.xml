@@ -91,4 +91,39 @@
     <string name="need_more_focus">Need more focus?</string>
     <string name="ai_upsell_desc">Use AI to generate a custom set from any PDF or web article.</string>
     <string name="try_ai_generate">Try AI Generate</string>
+
+    <string name="create_new_set">Create New Set</string>
+    <string name="save">Save</string>
+    <string name="set_name">Set Name</string>
+    <string name="set_name_placeholder">e.g., Biology 101 Midterm</string>
+    <string name="description_optional">Description (Optional)</string>
+    <string name="description_placeholder">What is this set about?</string>
+    <string name="public_set">Public Set</string>
+    <string name="public_set_desc">Allow others to find and study this set</string>
+    <string name="ai_generator">AI Generator</string>
+    <string name="ai_generator_desc">Upload a PDF or image, and let AI instantly create flashcards for you.</string>
+    <string name="upload">Upload</string>
+    <string name="terms_and_definitions">Terms &amp; Definitions</string>
+    <string name="enter_term">Enter term</string>
+    <string name="term">TERM</string>
+    <string name="enter_definition">Enter definition</string>
+    <string name="definition">DEFINITION</string>
+    <string name="add_row">Add Row</string>
+
+    <string name="set_progress">Set Progress</string>
+    <string name="mastered">Mastered</string>
+    <string name="total_words">Total Words</string>
+    <string name="words">Words</string>
+    <string name="flashcards">Flashcards</string>
+    <string name="practice">Practice</string>
+    <string name="learning">Learning</string>
+    <string name="advanced_psychology">Advanced Psychology</string>
+
+    <string name="friends_packs">Friends’ Packs</string>
+    <string name="friends_collections_desc">Explore and download study sets from your network.</string>
+    <string name="download_set">Download Set</string>
+    <string name="invite_friends_title">Invite friends to see more sets!</string>
+    <string name="invite_friends_desc">Grow your network to access a wider variety of shared study materials.</string>
+    <string name="invite_friends">Invite Friends</string>
+    <string name="shared_time">Shared %1$s</string>
 </resources>

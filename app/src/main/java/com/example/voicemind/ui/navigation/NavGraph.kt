@@ -7,13 +7,32 @@ import androidx.compose.animation.fadeOut
 import com.example.voicemind.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,9 +58,14 @@ import com.example.voicemind.ui.screens.home.HomeDashboard
 import com.example.voicemind.ui.screens.onboarding.OnboardingScreen
 import com.example.voicemind.ui.screens.onboarding.OnboardingViewModel
 import com.example.voicemind.ui.screens.profile.ProfileScreen
-import com.example.voicemind.ui.screens.sets.StudySetsScreen
+import com.example.voicemind.ui.screens.sets.CreateSetScreen
+import com.example.voicemind.ui.screens.sets.ExploreSetsScreen
+import com.example.voicemind.ui.screens.sets.MySetsScreen
+import com.example.voicemind.ui.screens.sets.SetDetailScreen
 import com.example.voicemind.ui.screens.settings.SettingsScreen
+import com.example.voicemind.ui.screens.sets.FriendsPacksScreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigationRoot(navController: NavHostController) {
 
@@ -55,16 +79,51 @@ fun AppNavigationRoot(navController: NavHostController) {
     }
 
     Scaffold(
-//        topBar = {
-//            when (selectedNavRoute) {
-//                NavRoute.SETS     -> StudySetsTopBar()
-//                NavRoute.PROFILE  -> ProfileTopBar()
-//                NavRoute.SETTINGS -> SettingsTopBar()
-//                // HOME tự quản lý TopBar riêng bên trong HomeDashboard
-//                // launcher, login, onboarding không có TopBar
-//                else -> {}
-//            }
-//        },
+        topBar = {
+            if (selectedNavRoute == NavRoute.SETS) {
+//                MySetsTopBar()
+            } else if (currentRouteString == NavRoute.EXPLORE_SETS || currentRouteString == NavRoute.FRIEND_PACK) {
+                val title = if (currentRouteString == NavRoute.EXPLORE_SETS) "Explore Sets" else "VocabMind"
+                TopAppBar(
+                    title = {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6200EE),
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color(0xFF4B5563)
+                            )
+                        }
+                    },
+                    actions = {
+                        Image(
+                            painter = painterResource(id = R.drawable.man),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFD591)),
+                            contentScale = ContentScale.Crop
+                        )
+                    },
+                    windowInsets = WindowInsets(0),
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.White
+                    )
+                )
+            }
+        },
         bottomBar = {
             if (selectedNavRoute != null) {
                 AppBottomNavigationBar(
@@ -92,15 +151,15 @@ fun AppNavigationRoot(navController: NavHostController) {
                     onToggle = { isFabMenuExpanded = !isFabMenuExpanded },
                     onCreateNew = {
                         isFabMenuExpanded = false
-                        /* TODO: Logic tạo set mới */
+                        navController.navigate(NavRoute.CREATE_SET)
                     },
                     onDownload = {
                         isFabMenuExpanded = false
-                        /* TODO: Logic tải set */
+                        navController.navigate(NavRoute.EXPLORE_SETS)
                     },
                     onAddFromFriends = {
                         isFabMenuExpanded = false
-                        /* TODO: Logic thêm set từ bạn bè */
+                        navController.navigate(NavRoute.FRIEND_PACK)
                     }
                 )
             }
@@ -146,7 +205,39 @@ fun AppNavigationRoot(navController: NavHostController) {
             }
 
             composable(NavRoute.SETS.route) {
-                StudySetsScreen()
+                MySetsScreen(
+                    onNavigateToDetail = { setId ->
+                        navController.navigate("${NavRoute.SET_DETAIL}/$setId")
+                    }
+                )
+            }
+
+            composable("${NavRoute.SET_DETAIL}/{setId}") { backStackEntry ->
+                val setId = backStackEntry.arguments?.getString("setId")
+                SetDetailScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(NavRoute.CREATE_SET) {
+                CreateSetScreen(
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(NavRoute.EXPLORE_SETS) {
+                ExploreSetsScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable(NavRoute.FRIEND_PACK) {
+                FriendsPacksScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
             }
 
             composable(NavRoute.PROFILE.route) {
@@ -189,5 +280,60 @@ fun AppNavigationRoot(navController: NavHostController) {
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MySetsTopBar() {
+    Surface(
+        shadowElevation = 2.dp,
+        color = Color.White
+    ) {
+        TopAppBar(
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFD591)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.man),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
+            },
+            actions = {
+                Icon(
+                    painter = painterResource(id = R.drawable.sparkle),
+                    contentDescription = null,
+                    tint = Color(0xFF6200EE),
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(24.dp)
+                )
+            },
+            windowInsets = WindowInsets(0),
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.White
+            )
+        )
     }
 }

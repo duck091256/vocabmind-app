@@ -4,10 +4,15 @@ import android.content.Context
 import androidx.room3.Room
 import com.example.voicemind.data.local.VocabDatabase
 import com.example.voicemind.data.local.dao.UserProfileDao
+import com.example.voicemind.data.local.dao.VocabDao
 import com.example.voicemind.data.repository.AuthRepositoryImpl
 import com.example.voicemind.data.repository.UserProfileRepositoryImpl
+import com.example.voicemind.data.repository.VocabRepositoryImpl
+import com.example.voicemind.data.source.local.VocabLocalDataSource
+import com.example.voicemind.data.source.remote.VocabRemoteDataSource
 import com.example.voicemind.domain.repository.AuthRepository
 import com.example.voicemind.domain.repository.UserProfileRepository
+import com.example.voicemind.domain.repository.VocabRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -38,10 +43,23 @@ object AppModule {
     @Provides
     @Singleton
     fun provideVocabDatabase(@ApplicationContext context: Context): VocabDatabase =
-        Room.databaseBuilder(context, VocabDatabase::class.java, "vocabmind.db").build()
+        Room.databaseBuilder(context, VocabDatabase::class.java, "vocabmind.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     fun provideUserProfileDao(db: VocabDatabase): UserProfileDao = db.userProfileDao()
+
+    @Provides
+    fun provideVocabDao(db: VocabDatabase): VocabDao = db.vocabDao()
+
+    @Provides
+    @Singleton
+    fun provideVocabLocalDataSource(dao: VocabDao): VocabLocalDataSource = VocabLocalDataSource(dao)
+
+    @Provides
+    @Singleton
+    fun provideVocabRemoteDataSource(firestore: FirebaseFirestore): VocabRemoteDataSource = VocabRemoteDataSource(firestore)
 
     @Provides
     @Singleton
@@ -49,4 +67,12 @@ object AppModule {
         firestore: FirebaseFirestore,
         dao: UserProfileDao
     ): UserProfileRepository = UserProfileRepositoryImpl(firestore, dao)
+
+    @Provides
+    @Singleton
+    fun provideVocabRepository(
+        localDataSource: VocabLocalDataSource,
+        remoteDataSource: VocabRemoteDataSource,
+        authRepository: AuthRepository
+    ): VocabRepository = VocabRepositoryImpl(localDataSource, remoteDataSource, authRepository)
 }
