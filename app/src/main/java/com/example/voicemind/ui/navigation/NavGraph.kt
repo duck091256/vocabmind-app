@@ -64,6 +64,7 @@ import com.example.voicemind.ui.screens.sets.MySetsScreen
 import com.example.voicemind.ui.screens.sets.SetDetailScreen
 import com.example.voicemind.ui.screens.settings.SettingsScreen
 import com.example.voicemind.ui.screens.sets.FriendsPacksScreen
+import com.example.voicemind.ui.screens.game.WordChainScreen   // ← thêm import game
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,8 +195,10 @@ fun AppNavigationRoot(navController: NavHostController) {
                 }
             }
 
+            // ========== SỬA LẠI HOMEDASHBOARD ==========
             composable(NavRoute.HOME.route) {
                 HomeDashboard(
+                    navController = navController,   // ← thêm navController
                     onNavigateToLogin = {
                         navController.navigate("login") {
                             popUpTo(NavRoute.HOME.route) { inclusive = true }
@@ -246,6 +249,11 @@ fun AppNavigationRoot(navController: NavHostController) {
 
             composable(NavRoute.SETTINGS.route) {
                 SettingsScreen()
+            }
+
+            // ========== THÊM MÀN HÌNH WORD CHAIN GAME ==========
+            composable(NavRoute.WORD_CHAIN_GAME) {
+                WordChainScreen(onBack = { navController.popBackStack() })
             }
 
             composable("login") {

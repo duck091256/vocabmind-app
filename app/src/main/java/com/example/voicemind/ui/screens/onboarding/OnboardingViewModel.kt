@@ -71,10 +71,19 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun saveProfile(onSuccess: () -> Unit) {
-        val uid = authRepository.currentUser?.uid ?: return
+        val uid = authRepository.currentUser?.uid
+        if (uid == null) {
+            // Không có user -> không thể lưu, báo lỗi và không gọi onSuccess
+            _uiState.update {
+                it.copy(error = "Vui lòng đăng nhập trước khi hoàn tất onboarding")
+            }
+            return
+        }
+
         val state = _uiState.value
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
+            _uiState.update { it.copy(isSaving = true, error = null) }
+
             val profile = UserProfile(
                 uid = uid,
                 displayName = state.displayName,
@@ -83,13 +92,21 @@ class OnboardingViewModel @Inject constructor(
                 goals = state.goals,
                 topics = state.topics
             )
+
             userProfileRepository.saveProfile(profile)
-                .onSuccess { onSuccess() }
-                .onFailure { _uiState.update { it.copy(isSaving = false, error = it.error) } }
+                .onSuccess {
+                    // ✅ Quan trọng: tắt trạng thái saving trước khi gọi callback
+                    _uiState.update { it.copy(isSaving = false) }
+                    onSuccess()
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(isSaving = false, error = exception.message ?: "Lỗi không xác định")
+                    }
+                }
         }
     }
 }
-
 data class OnboardingUiState(
     val displayName: String = "",
     val nativeLanguage: String = "",

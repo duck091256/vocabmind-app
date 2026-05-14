@@ -27,13 +27,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.voicemind.R
 import com.example.voicemind.ui.navigation.AppBottomNavigationBar
 import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
+
 @Composable
 fun HomeDashboard(
+    navController: NavController,
     viewModel: HomeDashboardViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
@@ -43,6 +47,7 @@ fun HomeDashboard(
     HomeDashboardContent(
         userName = displayName ?: "User",
         onNavigateToLogin = onNavigateToLogin,
+        onNavigateToGame = { navController.navigate(NavRoute.WORD_CHAIN_GAME) },
         modifier = modifier
     )
 }
@@ -51,6 +56,7 @@ fun HomeDashboard(
 fun HomeDashboardContent(
     userName: String,
     onNavigateToLogin: () -> Unit,
+    onNavigateToGame: () -> Unit,
     modifier: Modifier = Modifier,
     streakDays: Int = 12,
 ) {
@@ -66,7 +72,7 @@ fun HomeDashboardContent(
         Spacer(modifier = Modifier.height(32.dp))
         RecentVocabSetsSection()
         Spacer(modifier = Modifier.height(32.dp))
-        QuickActionsSection()
+        QuickActionsSection(onNavigateToGame = onNavigateToGame)
         Spacer(modifier = Modifier.height(32.dp))
         StreakSection(streakDays)
         Spacer(modifier = Modifier.height(32.dp))
@@ -85,10 +91,10 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFFD591)),
+                    .background(Color(0xFFFFD591))
+                    .clickable { onLogout() },
                 contentAlignment = Alignment.Center
             ) {
-                // Placeholder for profile image
                 Image(
                     painter = painterResource(id = R.drawable.man),
                     contentDescription = null,
@@ -189,7 +195,6 @@ private fun VocabSetCard(vocabSet: VocabSet) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(vocabSet.color)
             ) {
-                // Placeholder for set image
                 Image(
                     painter = ColorPainter(vocabSet.color.copy(alpha = 0.5f)),
                     contentDescription = null,
@@ -223,7 +228,7 @@ private fun VocabSetCard(vocabSet: VocabSet) {
 }
 
 @Composable
-private fun QuickActionsSection() {
+private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
     Column {
         Text(
             text = "Quick Actions",
@@ -232,8 +237,7 @@ private fun QuickActionsSection() {
             color = Color(0xFF1A1C1E)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // AI Generate Card
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -275,9 +279,9 @@ private fun QuickActionsSection() {
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Row(modifier = Modifier.fillMaxWidth()) {
             QuickActionSmallCard(
                 iconResId = R.drawable.book,
@@ -294,6 +298,52 @@ private fun QuickActionsSection() {
                 iconColor = Color(0xFFF3E8FF),
                 modifier = Modifier.weight(1f)
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToGame() },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF10B981))
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Word Chain Game",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Nối từ tiếng Anh, ôn tập từ vựng mỗi ngày",
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.energy),
+                        contentDescription = "Word Chain Game",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.White
+                    )
+                }
+            }
         }
     }
 }
@@ -407,46 +457,6 @@ private fun StreakIcon(color: Color) {
     }
 }
 
-@Composable
-private fun BottomNavigationBar() {
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 8.dp
-    ) {
-        NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.home), contentDescription = null, modifier = Modifier.size(24.dp)) },
-            label = { Text(stringResource(R.string.home)) },
-            selected = true,
-            onClick = { },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF6200EE),
-                unselectedIconColor = Color.Gray,
-                selectedTextColor = Color(0xFF6200EE),
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.dictionary), contentDescription = null, modifier = Modifier.size(24.dp)) },
-            label = { Text(stringResource(R.string.sets)) },
-            selected = false,
-            onClick = { }
-        )
-        NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.user), contentDescription = null, modifier = Modifier.size(24.dp)) },
-            label = { Text(stringResource(R.string.profile)) },
-            selected = false,
-            onClick = { }
-        )
-        NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.setting), contentDescription = null, modifier = Modifier.size(24.dp)) },
-            label = { Text(stringResource(R.string.settings)) },
-            selected = false,
-            onClick = { }
-        )
-    }
-}
-
 data class VocabSet(
     val title: String,
     val wordCount: Int,
@@ -462,18 +472,20 @@ private val sampleVocabSets = listOf(
 @Preview(showBackground = true)
 @Composable
 fun HomeDashboardPreview() {
-    Scaffold(
-        bottomBar = {
-            AppBottomNavigationBar(
-                currentRoute = NavRoute.HOME,
-                onNavigate = { }
-            )
-        }
-    ) { _ ->
-        VocabMindTheme {
+    VocabMindTheme {
+        Scaffold(
+            bottomBar = {
+                AppBottomNavigationBar(
+                    currentRoute = NavRoute.HOME,
+                    onNavigate = { }
+                )
+            }
+        ) { paddingValues ->
             HomeDashboardContent(
                 userName = "Duck",
-                onNavigateToLogin = {}
+                onNavigateToLogin = {},
+                onNavigateToGame = {},
+                modifier = Modifier.padding(paddingValues)
             )
         }
     }
