@@ -44,8 +44,6 @@ configure<ApplicationExtension> {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        // Optional: Add other compiler options here
-        // freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
     }
 }
 
@@ -57,6 +55,7 @@ dependencies {
     // Core AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -69,7 +68,8 @@ dependencies {
     implementation(libs.androidx.adapters)
     implementation(libs.androidx.room3.runtime)
     implementation(libs.androidx.compose.ui.text)
-    implementation(libs.androidx.runtime)
+    implementation(libs.play.services.base)
+    // implementation(libs.androidx.runtime) // Removed duplicate runtime dependency
     ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.compose.foundation.layout)
 
@@ -98,4 +98,7 @@ dependencies {
 
     // Material Icons Extended
     implementation(libs.androidx.material.icons.extended)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    // build.gradle (app level)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

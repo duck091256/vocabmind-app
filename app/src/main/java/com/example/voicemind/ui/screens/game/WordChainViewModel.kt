@@ -3,14 +3,16 @@ package com.example.voicemind.ui.screens.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.voicemind.domain.game.WordChainGame
+import com.example.voicemind.domain.repository.VocabularyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class WordChainViewModel @Inject constructor() : ViewModel() {
+class WordChainViewModel @Inject constructor(
+    private val vocabularyRepo: VocabularyRepository
+) : ViewModel() {
 
     private val game = WordChainGame()
 
@@ -24,11 +26,16 @@ class WordChainViewModel @Inject constructor() : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        // Giả lập load dữ liệu (nếu cần lấy từ xa, thay bằng repository)
+        loadVocabulary()
+    }
+
+    private fun loadVocabulary() {
         viewModelScope.launch {
             _isLoading.value = true
-            delay(300) // chỉ để mô phỏng, có thể bỏ
-            // Có thể cập nhật từ điển ở đây nếu muốn mở rộng
+            val wordSet = vocabularyRepo.getWordSet()
+            if (wordSet.isNotEmpty()) {
+                game.updateDictionary(wordSet)
+            }
             _isLoading.value = false
             startNewGame()
         }
@@ -43,9 +50,14 @@ class WordChainViewModel @Inject constructor() : ViewModel() {
     }
 
     fun startNewGame() {
-        val startingWords = listOf("apple", "elephant", "tiger", "rabbit", "table", "eagle", "great")
-        val randomWord = startingWords.random()
-        game.startGame(randomWord)
+        val currentSet = game.getCurrentWordSet()
+        if (currentSet.isNotEmpty()) {
+            val startWord = currentSet.random()
+            game.startGame(startWord)
+        } else {
+            // Fallback nếu chưa có dữ liệu
+            game.startGame("apple")
+        }
     }
 
     fun resetGame() {

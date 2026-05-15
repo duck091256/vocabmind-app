@@ -14,9 +14,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.res.painterResource
@@ -34,20 +38,28 @@ import com.example.voicemind.ui.navigation.AppBottomNavigationBar
 import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
-
 @Composable
 fun HomeDashboard(
     navController: NavController,
     viewModel: HomeDashboardViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
+    onNavigateToReview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+    val forgettingStats by viewModel.forgettingStats.collectAsStateWithLifecycle()
+    val reviewCount by viewModel.reviewCount.collectAsStateWithLifecycle()
+    val streak by viewModel.streak.collectAsStateWithLifecycle()
 
     HomeDashboardContent(
         userName = displayName ?: "User",
         onNavigateToLogin = onNavigateToLogin,
         onNavigateToGame = { navController.navigate(NavRoute.WORD_CHAIN_GAME) },
+        onNavigateToLessons = { navController.navigate("lessons") },
+        onNavigateToReview = onNavigateToReview,
+        forgettingStats = forgettingStats,
+        reviewCount = reviewCount,
+        streakDays = streak,
         modifier = modifier
     )
 }
@@ -57,8 +69,12 @@ fun HomeDashboardContent(
     userName: String,
     onNavigateToLogin: () -> Unit,
     onNavigateToGame: () -> Unit,
+    onNavigateToLessons: () -> Unit,
+    onNavigateToReview: () -> Unit,
+    forgettingStats: ForgettingStats,
+    reviewCount: Int = 0,
     modifier: Modifier = Modifier,
-    streakDays: Int = 12,
+    streakDays: Int = 0,
 ) {
     Column(
         modifier = modifier
@@ -70,14 +86,150 @@ fun HomeDashboardContent(
         Spacer(modifier = Modifier.height(20.dp))
         HeaderSection(userName, onNavigateToLogin)
         Spacer(modifier = Modifier.height(32.dp))
-        RecentVocabSetsSection()
+
+        ForgettingCurveSection(stats = forgettingStats)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onNavigateToReview,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+        ) {
+            Text("📚 Ôn tập từ vựng ($reviewCount từ cần ôn)")
+        }
         Spacer(modifier = Modifier.height(32.dp))
-        QuickActionsSection(onNavigateToGame = onNavigateToGame)
+        QuickActionsSection(
+            onNavigateToGame = onNavigateToGame,
+            onNavigateToLessons = onNavigateToLessons
+        )
         Spacer(modifier = Modifier.height(32.dp))
-        StreakSection(streakDays)
+        StreakSection(days = streakDays)
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
+// ==================== PHẦN BIỂU ĐỒ CỘT (ĐƯỜNG CONG LÃNG QUÊN) ====================
+
+data class ForgettingStats(
+    val after1Hour: Int = 0,
+    val after1Day: Int = 0,
+    val after3Days: Int = 0,
+    val after1Week: Int = 0,
+    val permanent: Int = 0
+)
+
+@Composable
+fun ForgettingCurveSection(stats: ForgettingStats) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📊 Đường cong lãng quên",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1C1E)
+            )
+            Text(
+                text = "Chi tiết",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF6200EE),
+                modifier = Modifier.clickable { }
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Số từ cần ôn lại theo thời gian",
+            fontSize = 14.sp,
+            color = Color.Gray
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Biểu đồ cột ngang (dạng column chart)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            val maxVal = maxOf(stats.after1Hour, stats.after1Day, stats.after3Days, stats.after1Week, stats.permanent, 1)
+            BarColumn(
+                label = "1 giờ",
+                value = stats.after1Hour,
+                maxValue = maxVal,
+                color = Color(0xFFEF4444)
+            )
+            BarColumn(
+                label = "1 ngày",
+                value = stats.after1Day,
+                maxValue = maxVal,
+                color = Color(0xFFF59E0B)
+            )
+            BarColumn(
+                label = "3 ngày",
+                value = stats.after3Days,
+                maxValue = maxVal,
+                color = Color(0xFF10B981)
+            )
+            BarColumn(
+                label = "1 tuần",
+                value = stats.after1Week,
+                maxValue = maxVal,
+                color = Color(0xFF3B82F6)
+            )
+            BarColumn(
+                label = "Vĩnh viễn",
+                value = stats.permanent,
+                maxValue = maxVal,
+                color = Color(0xFF8B5CF6)
+            )
+        }
+    }
+}
+
+@Composable
+fun BarColumn(
+    label: String,
+    value: Int,
+    maxValue: Int,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val heightFraction = if (maxValue > 0) value.toFloat() / maxValue else 0f
+    val barHeight = (heightFraction * 150).dp // chiều cao tối đa 150dp
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.width(50.dp)
+    ) {
+        // Giá trị số
+        Text(
+            text = value.toString(),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.DarkGray
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        // Cột
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(barHeight)
+                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                .background(color)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // Nhãn
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Color.Gray,
+            maxLines = 2,
+            softWrap = true
+        )
+    }
+}
+
 
 @Composable
 private fun HeaderSection(userName: String, onLogout: () -> Unit) {
@@ -91,8 +243,7 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFFD591))
-                    .clickable { onLogout() },
+                    .background(Color(0xFFFFD591)),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -122,18 +273,13 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
                 .background(Color.White, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.size(27.dp)
-            ) {
+            Box(modifier = Modifier.size(27.dp)) {
                 Icon(
                     painter = painterResource(id = R.drawable.notification),
                     contentDescription = "Notifications",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.Center),
+                    modifier = Modifier.size(24.dp).align(Alignment.Center),
                     tint = Color(0xFF1A1C1E)
                 )
-
                 Box(
                     modifier = Modifier
                         .size(8.dp)
@@ -146,89 +292,10 @@ private fun HeaderSection(userName: String, onLogout: () -> Unit) {
 }
 
 @Composable
-private fun RecentVocabSetsSection() {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.recent_vocab_sets),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1C1E)
-            )
-            Text(
-                text = stringResource(R.string.see_all),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF6200EE),
-                modifier = Modifier.clickable { }
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(end = 20.dp)
-        ) {
-            items(sampleVocabSets) { set ->
-                VocabSetCard(set)
-            }
-        }
-    }
-}
-
-@Composable
-private fun VocabSetCard(vocabSet: VocabSet) {
-    Card(
-        modifier = Modifier.width(200.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(vocabSet.color)
-            ) {
-                Image(
-                    painter = ColorPainter(vocabSet.color.copy(alpha = 0.5f)),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = vocabSet.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1C1E)
-            )
-            Text(
-                text = stringResource(R.string.words_count, vocabSet.wordCount),
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { if (vocabSet.progress >= 0.99f) 1f else vocabSet.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(50)),
-                color = Color(0xFF6200EE),
-                trackColor = Color(0xFFF1F3F5),
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
+private fun QuickActionsSection(
+    onNavigateToGame: () -> Unit,
+    onNavigateToLessons: () -> Unit
+) {
     Column {
         Text(
             text = "Quick Actions",
@@ -238,27 +305,28 @@ private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Card Học từ mới
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToLessons() },
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF6200EE))
         ) {
             Row(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(24.dp).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.ai_generate),
+                        text = "📚 Học từ mới",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = stringResource(R.string.ai_generate_desc),
+                        text = "100 từ cơ bản, 10 bài học",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -271,7 +339,7 @@ private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.sparkle),
+                        painter = painterResource(id = R.drawable.book),
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
                         tint = Color.White
@@ -282,49 +350,28 @@ private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            QuickActionSmallCard(
-                iconResId = R.drawable.book,
-                title = stringResource(R.string.my_sets),
-                description = stringResource(R.string.my_sets_desc),
-                iconColor = Color(0xFFEBE3FF),
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            QuickActionSmallCard(
-                iconResId = R.drawable.energy,
-                title = stringResource(R.string.quick_quiz),
-                description = stringResource(R.string.quick_quiz_desc),
-                iconColor = Color(0xFFF3E8FF),
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // Card Nối từ (Game)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onNavigateToGame() },
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF10B981))
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF03DAC5))
         ) {
             Row(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.padding(24.dp).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Word Chain Game",
+                        text = "🎮 Game nối từ",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "Nối từ tiếng Anh, ôn tập từ vựng mỗi ngày",
+                        text = "Thách thức vốn từ của bạn",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -337,8 +384,8 @@ private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.energy),
-                        contentDescription = "Word Chain Game",
+                        painter = painterResource(id = R.drawable.quiz_icon),
+                        contentDescription = null,
                         modifier = Modifier.size(32.dp),
                         tint = Color.White
                     )
@@ -349,144 +396,59 @@ private fun QuickActionsSection(onNavigateToGame: () -> Unit) {
 }
 
 @Composable
-private fun QuickActionSmallCard(
-    @DrawableRes iconResId: Int,
-    title: String,
-    description: String,
-    iconColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(iconColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = iconResId),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = Color(0xFF6200EE)
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1C1E)
-            )
-            Text(
-                text = description,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-        }
-    }
-}
-
-@Composable
 private fun StreakSection(days: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0B2))
     ) {
         Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.todays_streak),
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.6f)
-                )
-                Text(
-                    text = stringResource(R.string.days_active, days),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Color(0xFFFFB74D), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.fire_svgrepo_com),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                StreakIcon(Color(0xFF8B5CF6))
-                Spacer(modifier = Modifier.width(8.dp))
-                StreakIcon(Color(0xFF4F46E5))
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("+", color = Color.White, fontSize = 16.sp)
-                }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "$days Days Streak!",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFE65100)
+                )
+                Text(
+                    text = "You are on fire! Keep it up.",
+                    fontSize = 14.sp,
+                    color = Color(0xFFEF6C00)
+                )
             }
         }
     }
 }
-
-@Composable
-private fun StreakIcon(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(color),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.fire_svgrepo_com),
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = Color.White
-        )
-    }
-}
-
-data class VocabSet(
-    val title: String,
-    val wordCount: Int,
-    val progress: Float,
-    val color: Color
-)
-
-private val sampleVocabSets = listOf(
-    VocabSet("English Essentials", 45, 0.6f, Color(0xFFC5D1B7)),
-    VocabSet("IELTS Academic", 120, 0.3f, Color(0xFFFFB74D))
-)
 
 @Preview(showBackground = true)
 @Composable
 fun HomeDashboardPreview() {
     VocabMindTheme {
-        Scaffold(
-            bottomBar = {
-                AppBottomNavigationBar(
-                    currentRoute = NavRoute.HOME,
-                    onNavigate = { }
-                )
-            }
-        ) { paddingValues ->
-            HomeDashboardContent(
-                userName = "Duck",
-                onNavigateToLogin = {},
-                onNavigateToGame = {},
-                modifier = Modifier.padding(paddingValues)
-            )
-        }
+        HomeDashboardContent(
+            userName = "Alex",
+            onNavigateToLogin = {},
+            onNavigateToGame = {},
+            onNavigateToLessons = {},
+            onNavigateToReview = {},
+            forgettingStats = ForgettingStats(10, 5, 2, 8, 20),
+            reviewCount = 15
+        )
     }
 }

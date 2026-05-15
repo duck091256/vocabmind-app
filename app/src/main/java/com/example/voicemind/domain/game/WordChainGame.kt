@@ -112,6 +112,8 @@ class WordChainGame {
 
     private var validWords: Set<String> = defaultWordSet
 
+    fun getCurrentWordSet(): Set<String> = validWords
+
     fun updateDictionary(newWords: Set<String>) {
         validWords = newWords
     }
