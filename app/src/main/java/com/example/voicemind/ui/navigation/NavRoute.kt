@@ -19,5 +19,6 @@ enum class NavRoute(
         const val CREATE_SET = "create_set"
         const val FRIEND_PACK = "friend_pack"
         const val EXPLORE_SETS = "explore_sets"
+        const val WORD_CHAIN_GAME = "word_chain_game"
     }
 }

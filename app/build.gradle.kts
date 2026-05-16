@@ -57,6 +57,7 @@ dependencies {
     // Core AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -69,7 +70,7 @@ dependencies {
     implementation(libs.androidx.adapters)
     implementation(libs.androidx.room3.runtime)
     implementation(libs.androidx.compose.ui.text)
-    implementation(libs.androidx.runtime)
+    implementation(libs.play.services.base)
     implementation(libs.androidx.ui.text)
     implementation(libs.androidx.ui.graphics)
     ksp(libs.androidx.room3.compiler)
@@ -100,4 +101,8 @@ dependencies {
 
     // Material Icons Extended
     implementation(libs.androidx.material.icons.extended)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    // build.gradle (app level)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
