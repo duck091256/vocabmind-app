@@ -1,19 +1,15 @@
 package com.example.voicemind.ui.screens.sets
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -22,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,13 +29,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.voicemind.R
 import com.example.voicemind.domain.model.VocabSet
-import com.example.voicemind.ui.navigation.AppBottomNavigationBar
-import com.example.voicemind.ui.navigation.NavRoute
-import com.example.voicemind.ui.theme.VocabMindTheme
+import com.example.voicemind.domain.model.Word
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,7 +119,8 @@ fun MySetsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)  // -> Chừa ra 1 khoảng để bottomNav k che vào
                 ) {
                     items(uiState.sets, key = { it.id }) { set ->
                         SetCard(
@@ -205,18 +201,57 @@ fun SearchBarAndSort(
             ),
             modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Box {
-            IconButton(onClick = { expanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Sort Options")
+    }
+    
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+    ) {
+
+        Box(
+            contentAlignment = Alignment.CenterEnd
+        ) {
+
+            Row(
+                modifier = Modifier
+                    .clickable { expanded = true },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = "Sort By: ",
+                    color = Color(0xFF6200EE)
+                )
+
+                Text(
+                    text = sortOption.name.replace("_", " "),
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF6200EE)
+                )
+
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Sort Options",
+                    tint = Color(0xFF6200EE)
+
+                )
             }
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
+
                 SortOption.values().forEach { option ->
+
                     DropdownMenuItem(
-                        text = { Text(option.name.replace("_", " ")) },
+                        text = {
+                            Text(
+                                option.name.replace("_", " ")
+                            )
+                        },
                         onClick = {
                             onSortChange(option)
                             expanded = false
@@ -266,7 +301,7 @@ fun SetCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    val formatter = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
     val dateString = formatter.format(Date(vocabSet.createdAt))
 
     Card(
@@ -277,13 +312,39 @@ fun SetCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 0.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE6D9FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        /*painter = painterResource(
+                            id = vocabSet.imageRes ?: R.drawable.ic_folder
+                        ), -> Sẽ dùng sau khi cập nhật lại thêm field imageRes trong VocabSet*/
+                        painter = painterResource(R.drawable.ic_folder), // -> Tạm thời
+                        contentDescription = "Vocab Set Image",
+                        modifier = Modifier.size(32.dp),
+                        alignment = Alignment.Center,
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = vocabSet.title,
                         fontSize = 18.sp,
@@ -299,11 +360,14 @@ fun SetCard(
                     )
                 }
                 var expanded by remember { mutableStateOf(false) }
-                Box {
+                Box(
+                    contentAlignment = Alignment.CenterEnd
+                ) {
                     IconButton(onClick = { expanded = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Options",
+                            modifier = Modifier.size(32.dp),
                             tint = Color.Gray
                         )
                     }
@@ -334,8 +398,8 @@ fun SetCard(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
+//            Spacer(modifier = Modifier.height(16.dp))
+/*            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -351,7 +415,7 @@ fun SetCard(
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
-            }
+            }*/
         }
     }
 }
@@ -498,4 +562,166 @@ fun RenameSetDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun MySetsScreenPreview() {
+    val JLPTWords = listOf(
+        Word(
+            id = "w1",
+            setId = "1",
+            word = "こんにちは",
+            meaning = "Xin chào",
+            example = "こんにちは、元気ですか？"
+        ),
+        Word(
+            id = "w2",
+            setId = "1",
+            word = "ありがとう",
+            meaning = "Cảm ơn",
+            example = "助けてくれてありがとう。"
+        ),
+        Word(
+            id = "w3",
+            setId = "1",
+            word = "学生",
+            meaning = "Học sinh / Sinh viên",
+            example = "私は学生です。"
+        )
+    )
+
+    val ieltsWords = listOf(
+        Word(
+            id = "w4",
+            setId = "2",
+            word = "Analyze",
+            meaning = "Phân tích",
+            example = "Students should analyze the chart carefully."
+        ),
+        Word(
+            id = "w5",
+            setId = "2",
+            word = "Significant",
+            meaning = "Đáng kể",
+            example = "There was a significant increase in population."
+        ),
+        Word(
+            id = "w6",
+            setId = "2",
+            word = "Approach",
+            meaning = "Phương pháp",
+            example = "This approach is widely used in education."
+        )
+    )
+
+    val businessWords = listOf(
+        Word(
+            id = "w7",
+            setId = "3",
+            word = "Deadline",
+            meaning = "Hạn chót",
+            example = "We must finish the project before the deadline."
+        ),
+        Word(
+            id = "w8",
+            setId = "3",
+            word = "Negotiation",
+            meaning = "Đàm phán",
+            example = "The negotiation lasted for two hours."
+        ),
+        Word(
+            id = "w9",
+            setId = "3",
+            word = "Revenue",
+            meaning = "Doanh thu",
+            example = "Company revenue increased this quarter."
+        )
+    )
+
+    // Fake data preview
+    val previewSets = listOf(
+        VocabSet(
+            id = "1",
+            title = "JLPT N5 Vocabulary",
+            description = "Basic Japanese vocabulary",
+            totalWords = JLPTWords.size,
+            createdAt = System.currentTimeMillis(),
+            userId = "preview_user",
+            words = JLPTWords
+        ),
+        VocabSet(
+            id = "2",
+            title = "IELTS Academic",
+            description = "Common IELTS vocabulary",
+            totalWords = ieltsWords.size,
+            createdAt = System.currentTimeMillis(),
+            userId = "preview_user",
+            words = ieltsWords
+        ),
+
+        VocabSet(
+            id = "3",
+            title = "Business English",
+            description = "Words used in meetings and emails",
+            totalWords = businessWords.size,
+            createdAt = System.currentTimeMillis(),
+            userId = "preview_user",
+            words = businessWords
+        )
+    )
+
+    val previewState = SetsUiState(
+        sets = previewSets,
+        searchQuery = "",
+        sortOption = SortOption.NEWEST,
+        isLoading = false,
+        error = null
+    )
+
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF8F9FA))
+        ) {
+
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+
+                StudySetsHeader(
+                    totalCount = previewState.sets.size,
+                    modifier = Modifier.padding(20.dp)
+                )
+
+                SearchBarAndSort(
+                    query = previewState.searchQuery,
+                    onQueryChange = {},
+                    sortOption = previewState.sortOption,
+                    onSortChange = {},
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 8.dp)
+                ) {
+                    items(previewState.sets, key = { it.id }) { set ->
+                        SetCard(
+                            vocabSet = set,
+                            onClick = {},
+                            onRename = {},
+                            onDelete = {}
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

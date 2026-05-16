@@ -10,7 +10,7 @@ enum class NavRoute(
     @DrawableRes val iconResId: Int
 ) {
     HOME("home", R.string.home, R.drawable.home),
-    SETS("sets", R.string.sets, R.drawable.dictionary),
+    SETS("sets", R.string.sets, R.drawable.ic_cards),
     PROFILE("profile", R.string.profile, R.drawable.user),
     SETTINGS("settings", R.string.settings, R.drawable.setting);
 
