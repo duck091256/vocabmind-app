@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.voicemind.domain.model.Resource
 import com.example.voicemind.domain.repository.AuthRepository
 import com.example.voicemind.domain.repository.VocabRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,15 +17,33 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.example.voicemind.domain.model.ForgettingStats
+import com.example.voicemind.domain.repository.WordProgressRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.asStateFlow
+
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class MySetsViewModel @Inject constructor(
     private val vocabRepository: VocabRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val wordProgressRepo: WordProgressRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     private val _sortOption = MutableStateFlow(SortOption.NEWEST)
+    
+    private val _forgettingStats = MutableStateFlow<ForgettingStats?>(null)
+    val forgettingStats: StateFlow<ForgettingStats?> = _forgettingStats.asStateFlow()
+
+    private val _vocabularyState = MutableStateFlow(VocabularyState(0, 0, false))
+    val vocabularyState: StateFlow<VocabularyState> = _vocabularyState.asStateFlow()
+
+    private val _totalWords = MutableStateFlow(0)
+    val totalWords: StateFlow<Int> = _totalWords.asStateFlow()
+
+    private val _learnedWords = MutableStateFlow(0)
+    val learnedWords: StateFlow<Int> = _learnedWords.asStateFlow()
     
     private val _uiEvent = Channel<SetsUiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
@@ -75,6 +92,45 @@ class MySetsViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser?.uid?.let { userId ->
                 vocabRepository.syncSetsForUser(userId)
+            }
+            loadGlobalStats()
+        }
+    }
+
+    private fun loadGlobalStats() {
+        viewModelScope.launch {
+            val statsMap = wordProgressRepo.getStats()
+            _forgettingStats.value = ForgettingStats(
+                level1 = statsMap[1] ?: 0,
+                level2 = statsMap[2] ?: 0,
+                level3 = statsMap[3] ?: 0,
+                level4 = statsMap[4] ?: 0,
+                level5 = statsMap[5] ?: 0,
+                mastered = statsMap[6] ?: 0
+            )
+
+            val learned = statsMap.values.sum()
+            _learnedWords.value = learned
+
+            val reviewWords = wordProgressRepo.getWordsNeedReview()
+            val needReview = reviewWords.isNotEmpty()
+            val reviewCount = reviewWords.size
+
+            _vocabularyState.value = VocabularyState(
+                learnedWords = learned,
+                totalWords = _totalWords.value,
+                wordsToReviewCount = reviewCount,
+                hasWordsToReview = needReview,
+                reviewAfterDays = 0 // Global, can be ignored or calculated if needed
+            )
+        }
+        
+        viewModelScope.launch {
+            vocabRepository.getAllSets().collect { resource ->
+                if (resource is Resource.Success) {
+                    val total = resource.data.sumOf { it.totalWords }
+                    _totalWords.value = total
+                }
             }
         }
     }

@@ -10,12 +10,14 @@ import com.example.voicemind.domain.model.VocabSet
 import com.example.voicemind.domain.model.Word
 import com.example.voicemind.domain.repository.AuthRepository
 import com.example.voicemind.domain.repository.VocabRepository
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class VocabRepositoryImpl(
@@ -56,8 +58,37 @@ class VocabRepositoryImpl(
 
     override fun getWordsBySet(setId: String): Flow<Resource<List<Word>>> = flow {
         emit(Resource.Loading)
-        // Not fully implemented yet, returning empty
-        emit(Resource.Success(emptyList()))
+        
+        // Background sync from remote
+        val userId = authRepository.currentUser?.uid
+        if (userId != null) {
+            try {
+                val remoteWords = remoteDataSource.getWordsBySet(userId, setId)
+                if (remoteWords.isNotEmpty()) {
+                    val wordEntities = remoteWords.map { 
+                        WordEntity(id = it.id, setId = it.setId, word = it.word, meaning = it.meaning, example = it.example)
+                    }
+                    localDataSource.insertWords(wordEntities)
+                }
+            } catch (e: Exception) {
+                // Ignore sync errors and fallback to local data
+            }
+        }
+        
+        emitAll(
+            localDataSource.getWordsBySet(setId)
+                .map { entities -> Resource.Success(entities.map { it.toDomain() }) }
+                .catch { e -> emit(Resource.Error(e.message ?: "Unknown error", Exception(e))) }
+        )
+    }
+
+    override fun getSetById(setId: String): Flow<Resource<VocabSet>> = flow {
+        emit(Resource.Loading)
+        emitAll(
+            localDataSource.getSetById(setId)
+                .map { entity -> Resource.Success(entity.toDomain()) }
+                .catch { e -> emit(Resource.Error(e.message ?: "Unknown error", Exception(e))) }
+        )
     }
 
     override suspend fun createSet(
@@ -100,6 +131,42 @@ class VocabRepositoryImpl(
             Resource.Error(e.message ?: "Failed to create set", e)
         }
     }
+    
+    override suspend fun addWordsToSet(
+        setId: String,
+        words: List<Pair<String, String>>,
+        userId: String
+    ): Resource<Unit> {
+        return try {
+            // Retrieve current set from local data source
+            val existingSetEntity = localDataSource.getSetById(setId).first()
+            val newTotalWords = existingSetEntity.totalWords + words.size
+            
+            val wordModels = words.map { (term, definition) ->
+                Word(
+                    id = UUID.randomUUID().toString(),
+                    setId = setId,
+                    word = term,
+                    meaning = definition,
+                    example = ""
+                )
+            }
+            
+            // 1. Save to Remote
+            remoteDataSource.addWordsToSet(userId, setId, wordModels, newTotalWords)
+            
+            // 2. Save to Local
+            val wordEntities = wordModels.map { 
+                WordEntity(id = it.id, setId = it.setId, word = it.word, meaning = it.meaning, example = it.example)
+            }
+            localDataSource.insertWords(wordEntities)
+            localDataSource.updateTotalWords(setId, newTotalWords)
+            
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to add words to set", e)
+        }
+    }
 
     override suspend fun deleteSet(setId: String): Resource<Unit> {
         return try {
@@ -118,6 +185,25 @@ class VocabRepositoryImpl(
         return try {
             val remoteSets = remoteDataSource.getSetsByUser(userId).first()
             localDataSource.insertSets(remoteSets.map { it.toEntity() })
+            
+            coroutineScope {
+                remoteSets.forEach { set ->
+                    launch {
+                        try {
+                            val remoteWords = remoteDataSource.getWordsBySet(userId, set.id)
+                            if (remoteWords.isNotEmpty()) {
+                                val wordEntities = remoteWords.map { 
+                                    WordEntity(id = it.id, setId = it.setId, word = it.word, meaning = it.meaning, example = it.example)
+                                }
+                                localDataSource.insertWords(wordEntities)
+                            }
+                        } catch (e: Exception) {
+                            // Ignore sync error for individual sets
+                        }
+                    }
+                }
+            }
+            
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Sync failed", e)

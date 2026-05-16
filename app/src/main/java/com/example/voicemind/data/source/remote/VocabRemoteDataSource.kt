@@ -46,6 +46,30 @@ class VocabRemoteDataSource @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    suspend fun getWordsBySet(userId: String, setId: String): List<Word> {
+        val snapshot = firestore.collection("users")
+            .document(userId)
+            .collection("sets")
+            .document(setId)
+            .collection("words")
+            .get()
+            .await()
+            
+        return snapshot.documents.mapNotNull { doc ->
+            try {
+                Word(
+                    id = doc.getString("id") ?: doc.id,
+                    setId = doc.getString("setId") ?: setId,
+                    word = doc.getString("word") ?: "",
+                    meaning = doc.getString("meaning") ?: "",
+                    example = doc.getString("example") ?: ""
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
     suspend fun createSet(set: VocabSet, words: List<Word>) {
         val batch = firestore.batch()
         
@@ -62,6 +86,29 @@ class VocabRemoteDataSource @Inject constructor(
             "createdAt" to set.createdAt,
             "userId" to set.userId
         ))
+        
+        words.forEach { word ->
+            val wordRef = setRef.collection("words").document(word.id)
+            batch.set(wordRef, mapOf(
+                "id" to word.id,
+                "setId" to word.setId,
+                "word" to word.word,
+                "meaning" to word.meaning,
+                "example" to word.example
+            ))
+        }
+        
+        batch.commit().await()
+    }
+
+    suspend fun addWordsToSet(userId: String, setId: String, words: List<Word>, newTotalWords: Int) {
+        val batch = firestore.batch()
+        val setRef = firestore.collection("users")
+            .document(userId)
+            .collection("sets")
+            .document(setId)
+            
+        batch.update(setRef, "totalWords", newTotalWords)
         
         words.forEach { word ->
             val wordRef = setRef.collection("words").document(word.id)

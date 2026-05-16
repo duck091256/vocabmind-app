@@ -11,34 +11,69 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.lifecycle.SavedStateHandle
+import com.example.voicemind.domain.model.VocabSet
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+
 @HiltViewModel
-class CreateSetViewModel @Inject constructor(
+class CreateSetScreenViewModel @Inject constructor(
     private val vocabRepository: VocabRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<CreateSetUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    fun create(
+    private val setId: String? = savedStateHandle.get<String>("setId")
+
+    private val _existingSet = MutableStateFlow<VocabSet?>(null)
+    val existingSet: StateFlow<VocabSet?> = _existingSet.asStateFlow()
+
+    init {
+        setId?.let { id ->
+            viewModelScope.launch {
+                vocabRepository.getSetById(id).collectLatest { resource ->
+                    if (resource is Resource.Success) {
+                        _existingSet.value = resource.data
+                    }
+                }
+            }
+        }
+    }
+
+    fun createOrAddWords(
         title: String,
         description: String,
         words: List<Pair<String, String>>
     ) {
         viewModelScope.launch {
-            if (title.isBlank()) {
-                _uiEvent.emit(CreateSetUiEvent.ShowSnackbar("Title cannot be empty"))
+            if (words.isEmpty()) {
+                _uiEvent.emit(CreateSetUiEvent.ShowSnackbar("Please add at least one word"))
                 return@launch
             }
             
             val userId = authRepository.currentUser?.uid ?: return@launch
             
-            when (val result = vocabRepository.createSet(title, description, words, userId)) {
+            val result = if (setId != null) {
+                vocabRepository.addWordsToSet(setId, words, userId)
+            } else {
+                if (title.isBlank()) {
+                    _uiEvent.emit(CreateSetUiEvent.ShowSnackbar("Title cannot be empty"))
+                    return@launch
+                }
+                vocabRepository.createSet(title, description, words, userId)
+            }
+            
+            when (result) {
                 is Resource.Success -> {
                     _uiEvent.emit(CreateSetUiEvent.Success)
                 }
                 is Resource.Error -> {
-                    _uiEvent.emit(CreateSetUiEvent.ShowSnackbar(result.message ?: "Failed to create set"))
+                    _uiEvent.emit(CreateSetUiEvent.ShowSnackbar(result.message ?: "Failed to save"))
                 }
                 is Resource.Loading -> {}
             }

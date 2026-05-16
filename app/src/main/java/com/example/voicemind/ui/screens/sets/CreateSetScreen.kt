@@ -22,6 +22,7 @@ import com.example.voicemind.R
 import com.example.voicemind.ui.theme.VocabMindTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.UUID
 
 data class TermInput(
@@ -30,22 +31,13 @@ data class TermInput(
     var definition: String = ""
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateSetScreen(
     onNavigateBack: () -> Unit = {},
     onSaveSuccess: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: CreateSetViewModel = hiltViewModel()
+    viewModel: CreateSetScreenViewModel = hiltViewModel()
 ) {
-    var setName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var isPublic by remember { mutableStateOf(false) }
-    
-    val terms = remember { 
-        mutableStateListOf(TermInput(), TermInput()) 
-    }
-    
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = true) {
@@ -59,12 +51,49 @@ fun CreateSetScreen(
         }
     }
 
+    val existingSet by viewModel.existingSet.collectAsStateWithLifecycle()
+
+    CreateSetContent(
+        onNavigateBack = onNavigateBack,
+        onSaveClick = { name, desc, wordList ->
+            viewModel.createOrAddWords(name, desc, wordList)
+        },
+        snackbarHostState = snackbarHostState,
+        existingSet = existingSet,
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateSetContent(
+    onNavigateBack: () -> Unit,
+    onSaveClick: (String, String, List<Pair<String, String>>) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    existingSet: com.example.voicemind.domain.model.VocabSet? = null,
+    modifier: Modifier = Modifier
+) {
+    var setName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var isPublic by remember { mutableStateOf(false) }
+
+    LaunchedEffect(existingSet) {
+        if (existingSet != null) {
+            setName = existingSet.title
+            description = existingSet.description
+        }
+    }
+
+    val terms = remember {
+        mutableStateListOf(TermInput(), TermInput())
+    }
+
     Box(modifier = modifier.fillMaxSize().background(Color(0xFFF8F9FE))) {
         Column(modifier = Modifier.fillMaxSize()) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.create_new_set),
+                        text = if (existingSet != null) "Add New Vocabulary" else stringResource(R.string.create_new_set),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF673AB7)
@@ -83,10 +112,10 @@ fun CreateSetScreen(
                     TextButton(onClick = {
                         val wordList = terms.filter { it.term.isNotBlank() || it.definition.isNotBlank() }
                             .map { Pair(it.term, it.definition) }
-                        viewModel.create(setName, description, wordList)
+                        onSaveClick(setName, description, wordList)
                     }) {
                         Text(
-                            text = stringResource(R.string.save),
+                            text = if (existingSet != null) "Add" else stringResource(R.string.save),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF673AB7)
@@ -102,8 +131,8 @@ fun CreateSetScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
                     SetInfoSection(
@@ -112,7 +141,8 @@ fun CreateSetScreen(
                         description = description,
                         onDescriptionChange = { description = it },
                         isPublic = isPublic,
-                        onPublicChange = { isPublic = it }
+                        onPublicChange = { isPublic = it },
+                        enabled = existingSet == null
                     )
                 }
 
@@ -140,7 +170,7 @@ fun CreateSetScreen(
                 }
             }
         }
-            
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -156,6 +186,7 @@ fun SetInfoSection(
     onDescriptionChange: (String) -> Unit,
     isPublic: Boolean,
     onPublicChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -178,6 +209,7 @@ fun SetInfoSection(
                 OutlinedTextField(
                     value = setName,
                     onValueChange = onSetNameChange,
+                    enabled = enabled,
                     placeholder = { Text(stringResource(R.string.set_name_placeholder), color = Color.LightGray) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -200,6 +232,7 @@ fun SetInfoSection(
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
+                    enabled = enabled,
                     placeholder = { Text(stringResource(R.string.description_placeholder), color = Color.LightGray) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -234,6 +267,7 @@ fun SetInfoSection(
                 Switch(
                     checked = isPublic,
                     onCheckedChange = onPublicChange,
+                    enabled = enabled,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = Color(0xFF673AB7)
@@ -462,13 +496,17 @@ fun AddRowButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CreateSetScreenPreview() {
     VocabMindTheme {
         Scaffold { paddingValues ->
-            CreateSetScreen(modifier = Modifier.padding(paddingValues))
+            CreateSetContent(
+                onNavigateBack = {},
+                onSaveClick = { _, _, _ -> },
+                snackbarHostState = remember { SnackbarHostState() },
+                modifier = Modifier.padding(paddingValues)
+            )
         }
     }
 }

@@ -4,17 +4,38 @@ package com.example.voicemind.ui.screens.profile
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,17 +43,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.voicemind.R
-import com.example.voicemind.domain.model.ForgettingStats
-import com.example.voicemind.ui.theme.VocabMindTheme
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +146,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Đã học liên tiếp: ${viewModel.streak.value} ngày",
+                        text = "Đã học liên tiếp: ${viewModel.streak.collectAsState().value} ngày",
                         fontSize = 14.sp,
                         color = Color(0xFFF59E0B),
                         fontWeight = FontWeight.Bold
@@ -155,7 +173,7 @@ fun ProfileScreen(
                     Text("Nhận thông báo mỗi ngày lúc 8:00", fontSize = 12.sp, color = Color.Gray)
                 }
                 Switch(
-                    checked = viewModel.reminderEnabled.value,
+                    checked = viewModel.reminderEnabled.collectAsState().value,
                     onCheckedChange = { viewModel.toggleReminder(it) },
                     colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF6200EE))
                 )
@@ -200,31 +218,35 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // 5 cột thống kê
                         StatBarColumn(
-                            label = "1 giờ",
-                            count = forgettingStats.after1Hour,
+                            label = "2 giờ",
+                            count = forgettingStats.level1,
                             color = Color(0xFFEF4444)
                         )
                         StatBarColumn(
                             label = "1 ngày",
-                            count = forgettingStats.after1Day,
+                            count = forgettingStats.level2,
                             color = Color(0xFFF59E0B)
                         )
                         StatBarColumn(
-                            label = "3 ngày",
-                            count = forgettingStats.after3Days,
+                            label = "2 ngày",
+                            count = forgettingStats.level3,
                             color = Color(0xFF10B981)
                         )
                         StatBarColumn(
-                            label = "1 tuần",
-                            count = forgettingStats.after1Week,
+                            label = "3 ngày",
+                            count = forgettingStats.level4,
                             color = Color(0xFF3B82F6)
                         )
                         StatBarColumn(
-                            label = "Vĩnh viễn",
-                            count = forgettingStats.permanent,
+                            label = "5 ngày",
+                            count = forgettingStats.level5,
                             color = Color(0xFF8B5CF6)
+                        )
+                        StatBarColumn(
+                            label = "Master",
+                            count = forgettingStats.mastered,
+                            color = Color(0xFF673AB7)
                         )
                     }
                 }
@@ -250,7 +272,7 @@ fun ProfileScreen(
                 )
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
                 ProfileMenuItem(
-                    icon = Icons.Outlined.Logout,
+                    icon = Icons.AutoMirrored.Outlined.Logout,
                     title = "Đăng xuất",
                     iconTint = Color(0xFFEF4444),
                     titleColor = Color(0xFFEF4444),
@@ -268,7 +290,7 @@ fun StatBarColumn(label: String, count: Int, color: Color) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(55.dp)
+        modifier = Modifier.width(48.dp)
     ) {
         Text(
             text = count.toString(),

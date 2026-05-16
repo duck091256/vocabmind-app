@@ -47,9 +47,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.voicemind.ui.components.SpeedDialFab
 import com.example.voicemind.ui.screens.auth.LoginScreen
 import com.example.voicemind.ui.screens.auth.RegisterScreen
@@ -68,6 +70,7 @@ import com.example.voicemind.ui.screens.sets.FriendsPacksScreen
 import com.example.voicemind.ui.screens.sets.MySetsScreen
 import com.example.voicemind.ui.screens.sets.SetDetailScreen
 import com.example.voicemind.ui.screens.settings.SettingsScreen
+import com.example.voicemind.ui.screens.spaced_repetition.SpacedRepetitionInfoScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -212,19 +215,35 @@ fun AppNavigationRoot(navController: NavHostController) {
 
             composable(NavRoute.SETS.route) {
                 MySetsScreen(
+                    onNavigateToInfoSpacedRepetition = { navController.navigate("SPinfo") },
                     onNavigateToDetail = { setId ->
                         navController.navigate("${NavRoute.SET_DETAIL}/$setId")
-                    }
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+
                 )
+            }
+
+            composable("SPinfo") {
+                SpacedRepetitionInfoScreen(onNavigateBack = { navController.popBackStack() })
             }
 
             composable("${NavRoute.SET_DETAIL}/{setId}") { backStackEntry ->
+                val setId = backStackEntry.arguments?.getString("setId") ?: return@composable
                 SetDetailScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    setId = setId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onAddWordsClick = { navController.navigate("${NavRoute.CREATE_SET}?setId=$setId") }
                 )
             }
 
-            composable(NavRoute.CREATE_SET) {
+            composable(
+                route = "${NavRoute.CREATE_SET}?setId={setId}",
+                arguments = listOf(navArgument("setId") { 
+                    type = NavType.StringType
+                    nullable = true 
+                })
+            ) { backStackEntry ->
                 CreateSetScreen(
                     onSaveSuccess = {
                         navController.popBackStack()
@@ -332,6 +351,19 @@ fun AppNavigationRoot(navController: NavHostController) {
                         }
                     }
                 }
+            }
+
+            composable("register") {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate("login") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.popBackStack()
+                    }
+                )
             }
 
             composable("onboarding") {

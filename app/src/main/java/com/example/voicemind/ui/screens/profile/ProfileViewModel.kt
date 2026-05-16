@@ -66,11 +66,12 @@ class ProfileViewModel @Inject constructor(
             _isLoading.value = true
             val statsMap = wordProgressRepo.getStats() // trả về Map<Int,Int>
             _forgettingStats.value = ForgettingStats(
-                after1Hour = statsMap[1] ?: 0,
-                after1Day = statsMap[2] ?: 0,
-                after3Days = statsMap[3] ?: 0,
-                after1Week = statsMap[4] ?: 0,
-                permanent = statsMap[5] ?: 0
+                level1 = statsMap[1] ?: 0,
+                level2 = statsMap[2] ?: 0,
+                level3 = statsMap[3] ?: 0,
+                level4 = statsMap[4] ?: 0,
+                level5 = statsMap[5] ?: 0,
+                mastered = statsMap[6] ?: 0
             )
             _isLoading.value = false
         }

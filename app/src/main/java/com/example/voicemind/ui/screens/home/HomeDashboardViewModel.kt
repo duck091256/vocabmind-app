@@ -3,6 +3,7 @@ package com.example.voicemind.ui.screens.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.voicemind.domain.model.ForgettingStats
 import com.example.voicemind.domain.repository.AuthRepository
 import com.example.voicemind.domain.repository.UserProfileRepository
 import com.example.voicemind.domain.repository.WordProgressRepository
@@ -51,11 +52,12 @@ class HomeDashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val stats = wordProgressRepo.getStats()
             _forgettingStats.value = ForgettingStats(
-                after1Hour = stats[1] ?: 0,
-                after1Day = stats[2] ?: 0,
-                after3Days = stats[3] ?: 0,
-                after1Week = stats[4] ?: 0,
-                permanent = stats[5] ?: 0
+                level1 = stats[1] ?: 0,
+                level2 = stats[2] ?: 0,
+                level3 = stats[3] ?: 0,
+                level4 = stats[4] ?: 0,
+                level5 = stats[5] ?: 0,
+                mastered = stats[6] ?: 0
             )
             val needReview = wordProgressRepo.getWordsNeedReview().size
             _reviewCount.value = needReview

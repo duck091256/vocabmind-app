@@ -10,10 +10,17 @@ interface VocabRepository {
     fun getSetsByUser(userId: String): Flow<Resource<List<VocabSet>>>
     fun getRecentSets(): Flow<Resource<List<VocabSet>>>
     fun getWordsBySet(setId: String): Flow<Resource<List<Word>>>
+    fun getSetById(setId: String): Flow<Resource<VocabSet>>
 
     suspend fun createSet(
         title: String,
         description: String,
+        words: List<Pair<String, String>>,
+        userId: String
+    ): Resource<Unit>
+
+    suspend fun addWordsToSet(
+        setId: String,
         words: List<Pair<String, String>>,
         userId: String
     ): Resource<Unit>

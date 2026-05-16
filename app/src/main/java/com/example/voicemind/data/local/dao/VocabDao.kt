@@ -30,6 +30,12 @@ interface VocabDao {
     @Query("SELECT * FROM words WHERE setId = :setId")
     fun getWordsBySet(setId: String): Flow<List<WordEntity>>
 
+    @Query("SELECT * FROM vocab_sets WHERE id = :setId")
+    fun getSetById(setId: String): Flow<VocabSetEntity>
+
+    @Query("UPDATE vocab_sets SET totalWords = :totalWords WHERE id = :setId")
+    suspend fun updateTotalWords(setId: String, totalWords: Int)
+
     @Query("DELETE FROM vocab_sets WHERE id = :setId")
     suspend fun deleteSet(setId: String)
 

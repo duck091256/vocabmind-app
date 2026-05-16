@@ -1,28 +1,35 @@
 package com.example.voicemind.ui.screens.home
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,9 +39,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.voicemind.R
-import com.example.voicemind.ui.navigation.AppBottomNavigationBar
+import com.example.voicemind.domain.model.ForgettingStats
 import com.example.voicemind.ui.navigation.NavRoute
 import com.example.voicemind.ui.theme.VocabMindTheme
 
@@ -109,13 +115,7 @@ fun HomeDashboardContent(
 
 // ==================== PHẦN BIỂU ĐỒ CỘT (ĐƯỜNG CONG LÃNG QUÊN) ====================
 
-data class ForgettingStats(
-    val after1Hour: Int = 0,
-    val after1Day: Int = 0,
-    val after3Days: Int = 0,
-    val after1Week: Int = 0,
-    val permanent: Int = 0
-)
+// removed local ForgettingStats data class
 
 @Composable
 fun ForgettingCurveSection(stats: ForgettingStats) {
@@ -152,36 +152,42 @@ fun ForgettingCurveSection(stats: ForgettingStats) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            val maxVal = maxOf(stats.after1Hour, stats.after1Day, stats.after3Days, stats.after1Week, stats.permanent, 1)
+            val maxVal = maxOf(stats.level1, stats.level2, stats.level3, stats.level4, stats.level5, stats.mastered, 1)
             BarColumn(
-                label = "1 giờ",
-                value = stats.after1Hour,
+                label = "2 giờ",
+                value = stats.level1,
                 maxValue = maxVal,
                 color = Color(0xFFEF4444)
             )
             BarColumn(
                 label = "1 ngày",
-                value = stats.after1Day,
+                value = stats.level2,
                 maxValue = maxVal,
                 color = Color(0xFFF59E0B)
             )
             BarColumn(
-                label = "3 ngày",
-                value = stats.after3Days,
+                label = "2 ngày",
+                value = stats.level3,
                 maxValue = maxVal,
                 color = Color(0xFF10B981)
             )
             BarColumn(
-                label = "1 tuần",
-                value = stats.after1Week,
+                label = "3 ngày",
+                value = stats.level4,
                 maxValue = maxVal,
                 color = Color(0xFF3B82F6)
             )
             BarColumn(
-                label = "Vĩnh viễn",
-                value = stats.permanent,
+                label = "5 ngày",
+                value = stats.level5,
                 maxValue = maxVal,
                 color = Color(0xFF8B5CF6)
+            )
+            BarColumn(
+                label = "Master",
+                value = stats.mastered,
+                maxValue = maxVal,
+                color = Color(0xFF673AB7)
             )
         }
     }
@@ -200,7 +206,7 @@ fun BarColumn(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.width(50.dp)
+        modifier = modifier.width(45.dp)
     ) {
         // Giá trị số
         Text(
@@ -447,7 +453,7 @@ fun HomeDashboardPreview() {
             onNavigateToGame = {},
             onNavigateToLessons = {},
             onNavigateToReview = {},
-            forgettingStats = ForgettingStats(10, 5, 2, 8, 20),
+            forgettingStats = ForgettingStats(10, 5, 2, 8, 20, 15),
             reviewCount = 15
         )
     }

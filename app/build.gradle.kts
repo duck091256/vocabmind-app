@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.play.services.base)
     implementation(libs.androidx.ui.text)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.material3)
     ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.compose.foundation.layout)
 

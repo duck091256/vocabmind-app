@@ -3,46 +3,91 @@ package com.example.voicemind.ui.screens.sets
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.voicemind.R
+import com.example.voicemind.domain.model.ForgettingStats
 import com.example.voicemind.domain.model.VocabSet
 import com.example.voicemind.domain.model.Word
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.Date
-import androidx.compose.ui.platform.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MySetsScreen(
+    onNavigateToInfoSpacedRepetition: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MySetsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val forgettingStats by viewModel.forgettingStats.collectAsState()
+    val vocabularyState by viewModel.vocabularyState.collectAsState()
+    val totalWords by viewModel.totalWords.collectAsState()
+    val learnedWords by viewModel.learnedWords.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var setToDelete by remember { mutableStateOf<String?>(null) }
@@ -84,45 +129,76 @@ fun MySetsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
+                .background(Color(0xFFF8F9FA)),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            StudySetsHeader(
-                totalCount = uiState.sets.size,
-                modifier = Modifier.padding(20.dp)
-            )
+            // 1. Header
+            item {
+                StudySetsHeader(
+                    totalCount = uiState.sets.size,
+                    modifier = Modifier.padding(20.dp),
+                    onClick = onNavigateToInfoSpacedRepetition,
+                    onBackClick = onNavigateBack
+                )
+            }
 
-            SearchBarAndSort(
-                query = uiState.searchQuery,
-                onQueryChange = { viewModel.onAction(SetsUiAction.SearchQueryChanged(it)) },
-                sortOption = uiState.sortOption,
-                onSortChange = { viewModel.onAction(SetsUiAction.SortOptionChanged(it)) },
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            // 2. Progress & Review Cards
+            item {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    ProgressCard(
+                        learned = learnedWords,
+                        total = totalWords,
+                        stats = forgettingStats
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ReviewActionCard(state = vocabularyState)
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // 3. Search Bar
+            item {
+                SearchBarAndSort(
+                    query = uiState.searchQuery,
+                    onQueryChange = { viewModel.onAction(SetsUiAction.SearchQueryChanged(it)) },
+                    sortOption = uiState.sortOption,
+                    onSortChange = { viewModel.onAction(SetsUiAction.SortOptionChanged(it)) },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
+            // 4. Các trạng thái: Loading, Error, Empty hoặc List Data
             if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             } else if (uiState.error != null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
+                    }
                 }
             } else if (uiState.sets.isEmpty()) {
-                EmptyState()
+                item {
+                    EmptyState() // Đảm bảo EmptyState của bạn không chiếm fillMaxSize vì nó đang ở trong LazyColumn
+                }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)  // -> Chừa ra 1 khoảng để bottomNav k che vào
-                ) {
-                    items(uiState.sets, key = { it.id }) { set ->
+                // 5. Render danh sách các set bằng items()
+                items(uiState.sets, key = { it.id }) { set ->
+                    // Thêm padding cho từng SetCard để nó thụt lề giống SearchBar
+                    Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
                         SetCard(
                             vocabSet = set,
                             onClick = { onNavigateToDetail(set.id) },
@@ -133,7 +209,7 @@ fun MySetsScreen(
                 }
             }
         }
-        
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -142,7 +218,12 @@ fun MySetsScreen(
 }
 
 @Composable
-fun StudySetsHeader(totalCount: Int, modifier: Modifier = Modifier) {
+fun StudySetsHeader(
+    totalCount: Int,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -165,13 +246,63 @@ fun StudySetsHeader(totalCount: Int, modifier: Modifier = Modifier) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.study_sets_desc),
-            fontSize = 14.sp,
-            color = Color.Gray,
-            lineHeight = 20.sp
-        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val annotatedText = buildAnnotatedString {
+                withStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6200EE),
+                    )
+                ) {
+                    append("Study Less - Remember More ")
+                }
+
+                append(" new words with scientific method -  ")
+
+                withStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6200EE),
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    pushStringAnnotation(
+                        tag = "MORE_INFO",
+                        annotation = "spaced_repetition_info_screen"
+                    )
+
+                    append("Spaced Repetition")
+
+                    pop()
+                }
+            }
+
+            ClickableText(
+                text = annotatedText,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Start
+                ),
+                onClick = { offset ->
+
+                    annotatedText
+                        .getStringAnnotations(
+                            tag = "MORE_INFO",
+                            start = offset,
+                            end = offset
+                        )
+                        .firstOrNull()
+                        ?.let {
+                            onClick()
+                        }
+                }
+            )
+        }
     }
 }
 
@@ -342,7 +473,7 @@ fun SetCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(64.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
@@ -352,15 +483,18 @@ fun SetCard(
                         color = Color(0xFF1A1C1E)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = vocabSet.description,
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        maxLines = 2
-                    )
+                    if(vocabSet.description != "") {
+                        Text(
+                            text = vocabSet.description,
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            maxLines = 1
+                        )
+                    }
                 }
                 var expanded by remember { mutableStateOf(false) }
                 Box(
+                    modifier = Modifier.height(64.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     IconButton(onClick = { expanded = true }) {
@@ -644,7 +778,7 @@ fun MySetsScreenPreview() {
         VocabSet(
             id = "1",
             title = "JLPT N5 Vocabulary",
-            description = "Basic Japanese vocabulary",
+            description = "",
             totalWords = JLPTWords.size,
             createdAt = System.currentTimeMillis(),
             userId = "preview_user",
@@ -692,8 +826,26 @@ fun MySetsScreenPreview() {
 
                 StudySetsHeader(
                     totalCount = previewState.sets.size,
-                    modifier = Modifier.padding(20.dp)
+                    modifier = Modifier.padding(20.dp),
+                    onClick = {},
+                    onBackClick = {}
                 )
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                ) {
+                    ProgressCard(
+                        learned = 15,
+                        total = 30,
+                        stats = ForgettingStats(5, 3, 2, 2, 2, 1)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ReviewActionCard(state = VocabularyState(15, 5, true))
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
                 SearchBarAndSort(
                     query = previewState.searchQuery,

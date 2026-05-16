@@ -15,8 +15,22 @@ class VocabLocalDataSource @Inject constructor(
         return vocabDao.getSetsByUser(userId)
     }
 
+    fun getWordsBySet(setId: String): Flow<List<WordEntity>> {
+        return vocabDao.getWordsBySet(setId)
+    }
+
+    fun getSetById(setId: String): Flow<VocabSetEntity> = vocabDao.getSetById(setId)
+
+    suspend fun updateTotalWords(setId: String, totalWords: Int) {
+        vocabDao.updateTotalWords(setId, totalWords)
+    }
+
     suspend fun insertSet(set: VocabSetEntity) {
         vocabDao.insertSet(set)
+    }
+
+    suspend fun insertWords(words: List<WordEntity>) {
+        vocabDao.insertWords(words)
     }
 
     suspend fun insertSetWithWords(set: VocabSetEntity, words: List<WordEntity>) {
